@@ -1,7 +1,46 @@
 import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 import { useAuth } from '@/features/auth/use-auth'
 import { getSupabaseClient } from '@/lib/supabase'
+
+type SharedNotificationChannel = {
+  userId: string
+  refs: number
+  channel: RealtimeChannel
+}
+
+let sharedNotifications: SharedNotificationChannel | null = null
+
+function retainNotificationChannel(userId: string, onChange: () => void) {
+  const supabase = getSupabaseClient()
+  if (sharedNotifications?.userId === userId) {
+    sharedNotifications.refs += 1
+    return sharedNotifications
+  }
+  if (sharedNotifications) {
+    void supabase.removeChannel(sharedNotifications.channel)
+    sharedNotifications = null
+  }
+  const channel = supabase
+    .channel(`kindling-notifications-${userId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+      onChange,
+    )
+    .subscribe()
+  sharedNotifications = { userId, refs: 1, channel }
+  return sharedNotifications
+}
+
+function releaseNotificationChannel(held: SharedNotificationChannel) {
+  if (sharedNotifications !== held) return
+  sharedNotifications.refs -= 1
+  if (sharedNotifications.refs > 0) return
+  void getSupabaseClient().removeChannel(sharedNotifications.channel)
+  sharedNotifications = null
+}
 
 export function useNotifications() {
   const { user } = useAuth()
@@ -25,19 +64,17 @@ export function useNotifications() {
 
   useEffect(() => {
     if (!userId) return
-    const supabase = getSupabaseClient()
-    const channel = supabase
-      .channel(`kindling-notifications-${userId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
-        () => {
-          void queryClient.invalidateQueries({ queryKey: ['notifications', userId] })
-        },
-      )
-      .subscribe()
+    let held: SharedNotificationChannel | null = null
+    try {
+      held = retainNotificationChannel(userId, () => {
+        void queryClient.invalidateQueries({ queryKey: ['notifications', userId] })
+      })
+    } catch (cause) {
+      console.error('Kindling notification realtime failed', cause)
+      return
+    }
     return () => {
-      void supabase.removeChannel(channel)
+      releaseNotificationChannel(held)
     }
   }, [queryClient, userId])
 
