@@ -14,9 +14,9 @@ import {
   serializePushSubscription,
   waitForPushRegistration,
 } from '@/domain/push/subscribe'
+import { EDGE_VAPID_PUBLIC_KEY } from '@/domain/push/vapid-public'
 import { useAuth } from '@/features/auth/use-auth'
 import { useNotifications } from '@/hooks/use-notifications'
-import { readViteEnv } from '@/lib/client-env'
 import { getSupabaseClient } from '@/lib/supabase'
 import type { Database } from '@/types/database'
 
@@ -53,7 +53,7 @@ export function ActivityPage() {
   const [permission, setPermission] = useState<NotificationPermissionState>(
     typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
   )
-  const vapidPublic = readViteEnv().VITE_VAPID_PUBLIC_KEY
+  const vapidPublic = EDGE_VAPID_PUBLIC_KEY
   const gate = useMemo(() => {
     if (typeof window === 'undefined') return { kind: 'unsupported' as const }
     return pushGate(
@@ -91,10 +91,11 @@ export function ActivityPage() {
         const registration = await waitForPushRegistration()
         const existing = await registration.pushManager.getSubscription()
         if (!existing || cancelled) return
+        const subscription = await ensurePushSubscription(registration, vapidPublic)
+        if (cancelled) return
         setPushOk(true)
-        if (!vapidPublic) return
         try {
-          await persistPushSubscription(existing)
+          await persistPushSubscription(subscription)
         } catch (cause) {
           if (!cancelled) {
             setPushError(clientErrorMessage(cause, 'Could not save this device for push.'))

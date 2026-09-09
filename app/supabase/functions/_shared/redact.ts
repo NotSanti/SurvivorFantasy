@@ -8,7 +8,7 @@ export function redactForLog(value: string): string {
     .replace(INVITE_TOKEN, '$1[token]')
     .replace(JWT, '[jwt]')
     .replace(/Bearer\s+\S+/gi, 'Bearer [credential]')
-    .replace(/vapid[^\s]*/gi, '[credential]')
+    .replace(/\bvapid t=[^\s,]+/gi, 'vapid t=[credential]')
     .replace(EMAIL, '[redacted]')
     .replace(URL, '[url]')
     .slice(0, 280)

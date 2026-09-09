@@ -30,8 +30,15 @@ describe('clientErrorMessage', () => {
 })
 
 describe('ensurePushSubscription', () => {
+  const publicKey = bytesToUrlBase64(
+    Uint8Array.from({ length: 65 }, (_, index) => (index === 0 ? 4 : 1)),
+  )
+
   it('reuses an existing browser subscription instead of failing', async () => {
-    const existing = { endpoint: 'https://fcm.googleapis.com/x' }
+    const existing = {
+      endpoint: 'https://fcm.googleapis.com/x',
+      options: { applicationServerKey: vapidApplicationServerKey(publicKey) },
+    }
     const subscribe = vi.fn()
     const registration = {
       pushManager: {
@@ -39,14 +46,33 @@ describe('ensurePushSubscription', () => {
         subscribe,
       },
     }
-    await expect(
-      ensurePushSubscription(registration, 'B'.repeat(88)),
-    ).resolves.toBe(existing)
+    await expect(ensurePushSubscription(registration, publicKey)).resolves.toBe(existing)
     expect(subscribe).not.toHaveBeenCalled()
   })
 
+  it('replaces a subscription created with a different VAPID key', async () => {
+    const stale = {
+      endpoint: 'https://fcm.googleapis.com/old',
+      unsubscribe: vi.fn().mockResolvedValue(true),
+    }
+    const next = { endpoint: 'https://fcm.googleapis.com/new' }
+    const subscribe = vi.fn().mockResolvedValue(next)
+    const registration = {
+      pushManager: {
+        getSubscription: vi.fn().mockResolvedValue(stale),
+        subscribe,
+      },
+    }
+    await expect(ensurePushSubscription(registration, publicKey)).resolves.toBe(next)
+    expect(stale.unsubscribe).toHaveBeenCalled()
+    expect(subscribe).toHaveBeenCalled()
+  })
+
   it('falls back to getSubscription when subscribe throws', async () => {
-    const existing = { endpoint: 'https://web.push.apple.com/abc' }
+    const existing = {
+      endpoint: 'https://web.push.apple.com/abc',
+      options: { applicationServerKey: vapidApplicationServerKey(publicKey) },
+    }
     const registration = {
       pushManager: {
         getSubscription: vi
@@ -56,9 +82,7 @@ describe('ensurePushSubscription', () => {
         subscribe: vi.fn().mockRejectedValue(new Error('already subscribed')),
       },
     }
-    await expect(
-      ensurePushSubscription(registration, 'B'.repeat(88)),
-    ).resolves.toBe(existing)
+    await expect(ensurePushSubscription(registration, publicKey)).resolves.toBe(existing)
   })
 })
 

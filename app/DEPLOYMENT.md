@@ -14,7 +14,7 @@ Set these **public** variables only (already set for production/preview/developm
 - `VITE_APP_NAME`
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY` (or the current publishable key)
-- `VITE_VAPID_PUBLIC_KEY`
+- `VITE_VAPID_PUBLIC_KEY` (must match Edge `VAPID_PRIVATE_KEY`; the PWA also ships `EDGE_VAPID_PUBLIC_KEY` so a stale Vercel value cannot resubscribe with the wrong key)
 
 Never set `SUPABASE_SERVICE_ROLE_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, or `CRON_SECRET` as `VITE_*` or in the Vercel client env.
 

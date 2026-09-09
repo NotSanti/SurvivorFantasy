@@ -220,5 +220,7 @@ Deno.serve(async (request) => {
     ]
       .filter(Boolean)
       .join(' '),
+    vapid_public: vapidPublic,
+    configured_key_matches: configuredKeyMatches,
   })
 })

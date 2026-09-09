@@ -46,6 +46,21 @@ function encodeKey(value: ArrayBuffer | ArrayBufferView | null) {
   return bytesToUrlBase64(bytes)
 }
 
+export function sameVapidApplicationServerKey(
+  subscription: { options?: { applicationServerKey?: BufferSource | null } },
+  publicKey: string,
+) {
+  const current = subscription.options?.applicationServerKey
+  if (!current) return false
+  const bytes =
+    current instanceof ArrayBuffer
+      ? new Uint8Array(current)
+      : new Uint8Array(current.buffer, current.byteOffset, current.byteLength)
+  const expected = vapidApplicationServerKey(publicKey)
+  if (bytes.byteLength !== expected.byteLength) return false
+  return bytes.every((value, index) => value === expected[index])
+}
+
 export async function ensurePushSubscription(
   registration: {
     pushManager: {
@@ -56,7 +71,10 @@ export async function ensurePushSubscription(
   publicKey: string,
 ) {
   const existing = await registration.pushManager.getSubscription()
-  if (existing) return existing
+  if (existing && sameVapidApplicationServerKey(existing, publicKey)) return existing
+  if (existing && 'unsubscribe' in existing && typeof existing.unsubscribe === 'function') {
+    await existing.unsubscribe()
+  }
   try {
     return await registration.pushManager.subscribe({
       userVisibleOnly: true,
@@ -64,7 +82,7 @@ export async function ensurePushSubscription(
     })
   } catch (cause) {
     const fallback = await registration.pushManager.getSubscription()
-    if (fallback) return fallback
+    if (fallback && sameVapidApplicationServerKey(fallback, publicKey)) return fallback
     throw cause
   }
 }
