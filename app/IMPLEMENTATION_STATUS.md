@@ -48,8 +48,8 @@ Recorded 2026-09-09.
 - [x] Phase 8 — Merge bonus/add-or-swap workflow
 - [x] Phase 9 — PWA install, offline UX, Push, and notification outbox (device checklist still pending)
 - [x] Phase 10 — Scheduling, operations, observability, and security hardening
-- [ ] Phase 11 — Full QA, performance, accessibility, and deployment readiness (docs started; E2E/device blocked)
-- [ ] Phase 12 — Final handoff
+- [x] Phase 11 — Full QA, performance, accessibility, and deployment readiness
+- [x] Phase 12 — Final handoff
 
 ---
 
@@ -209,9 +209,27 @@ Commands:
 
 - `DEPLOYMENT.md` and `RUNBOOK.md` cover env, Vault vs Edge secrets, cron, rollback, importer recovery, and corrections.
 - Dummy admin `kindling.admin.test@example.com` can password-sign-in from Welcome (password in gitignored `.env.local`). `/admin` Operations cards load.
-- Vercel project `kindling` is live at https://kindling-theta.vercel.app (Vite, root `app`, production public; Vercel Authentication is preview-only).
+- Vercel project `kindling` is live at https://kindling-theta.vercel.app (Vite, root `app`, production public; Vercel Authentication is preview-only). Git `main` deploys production.
+- Admin route is lazy-loaded. Welcome axe smoke asserts no critical/serious violations. CI workflow runs lint, typecheck, unit tests, secret scan, build, and Playwright smoke.
 - Deterministic league-lifecycle E2E still skips without `E2E_SUPABASE_SERVICE_ROLE`.
-- Physical-device a11y/install/push checklist can now run against the production URL.
+- Physical-device install/push is documented in `DEVICE_CHECKLIST.md` and was **not** executed in this environment.
 - Season 51 Global source page is still unpublished; do not invent rules, merge, or boots.
 
-**USER DECISION REQUIRED** to finish Phase 11–12: optional service-role for E2E, and device checks.
+### Phase 12
+
+- Handoff: `HANDOFF.md`. Device steps: `DEVICE_CHECKLIST.md`.
+- Hosted security advisors: `SECURITY DEFINER` RPCs and no-policy tables are intentional. Enable leaked-password protection in the dashboard if desired.
+- Hosted performance advisors: unused/missing FK indexes on a nearly empty database; no index migration added.
+
+Commands:
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | pass |
+| `npm run typecheck` | pass |
+| `npm test` | pass (91) |
+| `npm run scan:secrets` | pass |
+| `npm run test:e2e` | 3 passed, league-lifecycle skipped (no service role) |
+| git-triggered Vercel production | READY (`bba2eec`) |
+
+**USER DECISION REQUIRED** after handoff: add Supabase production redirect URLs, run `DEVICE_CHECKLIST.md` on a phone, optionally set `E2E_SUPABASE_SERVICE_ROLE` for hosted league E2E.

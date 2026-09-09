@@ -1,5 +1,8 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import { AppShell } from '@/app/AppShell'
+import { LoadingState } from '@/components/states/LoadingState'
+import { PageContainer } from '@/components/layout/PageContainer'
 import { RequireAuth } from '@/features/auth/RequireAuth'
 import { RequireOnboarding } from '@/features/auth/RequireOnboarding'
 import { OnboardingPage } from '@/pages/OnboardingPage'
@@ -13,12 +16,16 @@ import { LeagueLobbyPage } from '@/pages/LeagueLobbyPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { StandingsPage } from '@/pages/StandingsPage'
 import { TribePage } from '@/pages/TribePage'
-import { AdminPage } from '@/pages/AdminPage'
 import { DraftRoomPage } from '@/pages/DraftRoomPage'
 import { EpisodeDetailPage } from '@/pages/EpisodeDetailPage'
 import { WelcomePage } from '@/pages/WelcomePage'
 import { LeagueRulesPage } from '@/pages/LeagueRulesPage'
 import { MergeMovePage } from '@/pages/MergeMovePage'
+
+const AdminPage = lazy(async () => {
+  const module = await import('@/pages/AdminPage')
+  return { default: module.AdminPage }
+})
 
 export function AppRouter() {
   return (
@@ -55,7 +62,20 @@ export function AppRouter() {
           <Route path="/tribe" element={<TribePage />} />
           <Route path="/standings" element={<StandingsPage />} />
           <Route path="/activity" element={<ActivityPage />} />
-          <Route path="/admin" element={<AdminPage />} />
+          <Route
+            path="/admin"
+            element={
+              <Suspense
+                fallback={
+                  <PageContainer className="justify-center">
+                    <LoadingState label="Loading admin" />
+                  </PageContainer>
+                }
+              >
+                <AdminPage />
+              </Suspense>
+            }
+          />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
