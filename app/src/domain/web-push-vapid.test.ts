@@ -4,6 +4,8 @@ import {
   decodeJwtParts,
   generateVapidKeys,
   resolveVapidSubject,
+  vapidPublicFromPrivate,
+  verifyVapidJwt,
 } from './web-push-vapid'
 
 describe('web-push vapid spike', () => {
@@ -19,9 +21,21 @@ describe('web-push vapid spike', () => {
     expect(header.alg).toBe('ES256')
     expect(payload.aud).toBe('https://fcm.googleapis.com')
     expect(payload.sub).toBe('https://kindling-theta.vercel.app')
-    expect(payload.iat).toEqual(expect.any(Number))
+    expect(payload.exp).toEqual(expect.any(Number))
+    const publicKey = await vapidPublicFromPrivate(keys.privateKey)
+    const exported = await crypto.subtle.exportKey('raw', keys.publicKey)
+    expect(publicKey).toBe(toUrl(new Uint8Array(exported)))
+    await expect(verifyVapidJwt(token, publicKey)).resolves.toBe(true)
   })
 })
+
+function toUrl(bytes: Uint8Array) {
+  let binary = ''
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte)
+  })
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+}
 
 describe('resolveVapidSubject', () => {
   it('rejects placeholder and localhost subjects that Apple 403s', () => {

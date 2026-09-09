@@ -1,3 +1,5 @@
+import { bytesToUrlBase64, urlBase64ToBytes } from './web-push-encrypt.ts'
+
 const encoder = new TextEncoder()
 
 export const DEFAULT_VAPID_SUBJECT = 'https://kindling-theta.vercel.app'
@@ -19,7 +21,41 @@ export function resolveVapidSubject(raw: string | undefined, fallback = DEFAULT_
 
 export function ecdsaSignatureToJose(signature: Uint8Array) {
   if (signature.byteLength === 64) return signature
-  return derEcdsaToP1363(signature)
+  if (signature[0] === 0x30) return derEcdsaToP1363(signature)
+  throw new Error(`Unexpected ECDSA signature length ${signature.byteLength}`)
+}
+
+export async function vapidPublicFromPrivate(privateKey: CryptoKey) {
+  const jwk = await crypto.subtle.exportKey('jwk', privateKey)
+  if (!jwk.x || !jwk.y) throw new Error('VAPID private key did not include public coordinates')
+  const x = urlBase64ToBytes(jwk.x)
+  const y = urlBase64ToBytes(jwk.y)
+  if (x.byteLength !== 32 || y.byteLength !== 32) {
+    throw new Error('VAPID public coordinates must be 32 bytes')
+  }
+  const raw = new Uint8Array(65)
+  raw[0] = 4
+  raw.set(x, 1)
+  raw.set(y, 33)
+  return bytesToUrlBase64(raw)
+}
+
+export async function verifyVapidJwt(token: string, publicKeyRaw: string) {
+  const [header, payload, signature] = token.split('.')
+  if (!header || !payload || !signature) return false
+  const key = await crypto.subtle.importKey(
+    'raw',
+    urlBase64ToBytes(publicKeyRaw),
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    false,
+    ['verify'],
+  )
+  return crypto.subtle.verify(
+    { name: 'ECDSA', hash: 'SHA-256' },
+    key,
+    urlBase64ToBytes(signature),
+    encoder.encode(`${header}.${payload}`),
+  )
 }
 
 function derEcdsaToP1363(der: Uint8Array) {
@@ -63,9 +99,8 @@ export async function createVapidJwt(options: {
     encoder.encode(
       JSON.stringify({
         aud: options.audience,
-        sub: resolveVapidSubject(options.subject),
-        iat: now,
         exp: now + (options.expiresInSeconds ?? 12 * 60 * 60),
+        sub: resolveVapidSubject(options.subject),
       }),
     ),
   )}`

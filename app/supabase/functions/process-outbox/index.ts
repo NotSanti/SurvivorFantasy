@@ -5,6 +5,8 @@ import {
   createVapidJwt,
   normalizeVapidPublicKey,
   resolveVapidSubject,
+  vapidPublicFromPrivate,
+  verifyVapidJwt,
 } from '../_shared/web-push-vapid.ts'
 import { encryptWebPush, pushCopyFromOutbox, urlBase64ToBytes } from '../_shared/web-push-encrypt.ts'
 
@@ -36,7 +38,7 @@ function nextAvailable(attemptCount: number) {
 async function importVapidPrivateKey(raw: string) {
   const normalized = raw.replace(/\s+/g, '')
   const bytes = urlBase64ToBytes(normalized)
-  return crypto.subtle.importKey('pkcs8', bytes, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign'])
+  return crypto.subtle.importKey('pkcs8', bytes, { name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign'])
 }
 
 Deno.serve(async (request) => {
@@ -47,7 +49,7 @@ Deno.serve(async (request) => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   const anonKey = Deno.env.get('ANON_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY')
-  const vapidPublic = normalizeVapidPublicKey(Deno.env.get('VAPID_PUBLIC_KEY') ?? '')
+  const configuredPublic = normalizeVapidPublicKey(Deno.env.get('VAPID_PUBLIC_KEY') ?? '')
   const vapidPrivateRaw = Deno.env.get('VAPID_PRIVATE_KEY')
   const vapidSubject = resolveVapidSubject(Deno.env.get('VAPID_SUBJECT'))
   if (!supabaseUrl || !serviceKey || !anonKey) {
@@ -72,17 +74,28 @@ Deno.serve(async (request) => {
     return json({ error: 'Admin or cron secret required' }, 403)
   }
 
-  if (!vapidPublic || !vapidPrivateRaw) {
+  if (!vapidPrivateRaw) {
     return json({ status: 'missing_vapid', detail: 'VAPID keys are not configured in Edge secrets.' }, 503)
   }
 
   let vapidPrivate: CryptoKey
+  let vapidPublic: string
   try {
     vapidPrivate = await importVapidPrivateKey(vapidPrivateRaw)
+    vapidPublic = await vapidPublicFromPrivate(vapidPrivate)
+    const probe = await createVapidJwt({
+      audience: 'https://fcm.googleapis.com',
+      subject: vapidSubject,
+      privateKey: vapidPrivate,
+    })
+    if (!(await verifyVapidJwt(probe, vapidPublic))) {
+      throw new Error('self-verify')
+    }
   } catch {
     logEvent('process_outbox_invalid_vapid', { request_id: requestId })
-    return json({ status: 'invalid_vapid', detail: 'VAPID private key could not be imported.' }, 503)
+    return json({ status: 'invalid_vapid', detail: 'VAPID private key could not sign a verifiable JWT.' }, 503)
   }
+  const configuredKeyMatches = !configuredPublic || configuredPublic === vapidPublic
 
   const service = createClient(supabaseUrl, serviceKey)
   const { data: claimed, error: claimError } = await service.rpc('claim_notification_outbox', {
@@ -203,6 +216,7 @@ Deno.serve(async (request) => {
     detail: [
       `Claimed ${jobs.length}, sent ${sent}, dead-letter ${dead}.`,
       deliveries.length ? deliveries.map((item) => redact(item)).join('; ') : null,
+      configuredKeyMatches ? null : 'Edge VAPID_PUBLIC_KEY does not match the signing key.',
     ]
       .filter(Boolean)
       .join(' '),
