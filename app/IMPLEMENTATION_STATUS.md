@@ -209,8 +209,9 @@ Commands:
 
 - `DEPLOYMENT.md` and `RUNBOOK.md` cover env, Vault vs Edge secrets, cron, rollback, importer recovery, and corrections.
 - Dummy admin `kindling.admin.test@example.com` can password-sign-in from Welcome (password in gitignored `.env.local`). `/admin` Operations cards load.
+- Vercel project `kindling` is live at https://kindling-theta.vercel.app (Vite, root `app`, production public; Vercel Authentication is preview-only).
 - Deterministic league-lifecycle E2E still skips without `E2E_SUPABASE_SERVICE_ROLE`.
-- Physical-device a11y/install/push checklist is still a user/device step.
+- Physical-device a11y/install/push checklist can now run against the production URL.
 - Season 51 Global source page is still unpublished; do not invent rules, merge, or boots.
 
 **USER DECISION REQUIRED** to finish Phase 11–12: optional service-role for E2E, and device checks.

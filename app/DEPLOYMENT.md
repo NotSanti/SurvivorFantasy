@@ -5,8 +5,13 @@ API URL: `https://ryzueuyypmdkqfufdpzs.supabase.co`
 
 ## Client (Vercel)
 
-Set these **public** variables only:
+Production: [https://kindling-theta.vercel.app](https://kindling-theta.vercel.app)  
+Project: [kindling](https://vercel.com/notsantis-projects/kindling) (`prj_2fjVUAdw12s9mpBsawfBBiYzIGuP`)  
+Git: `NotSanti/SurvivorFantasy`, root directory `app`.
 
+Set these **public** variables only (already set for production/preview/development):
+
+- `VITE_APP_NAME`
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY` (or the current publishable key)
 - `VITE_VAPID_PUBLIC_KEY`
@@ -17,7 +22,8 @@ Auth redirect URLs must include:
 
 - `http://127.0.0.1:5173/auth/callback`
 - preview `4173` if used
-- the production origin `/auth/callback`
+- `https://kindling-theta.vercel.app/auth/callback`
+- `https://kindling-notsantis-projects.vercel.app/auth/callback`
 
 `vercel.json` ships CSP and security headers compatible with Supabase Realtime (`https` + `wss` to `*.supabase.co`) and the same-origin service worker.
 
