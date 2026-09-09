@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
@@ -8,7 +8,12 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { pushGate, readInstallSnapshot, type NotificationPermissionState } from '@/domain/pwa/install'
-import { vapidPublicKeyBytes } from '@/domain/web-push/keys'
+import {
+  clientErrorMessage,
+  ensurePushSubscription,
+  serializePushSubscription,
+  waitForPushRegistration,
+} from '@/domain/push/subscribe'
 import { useAuth } from '@/features/auth/use-auth'
 import { useNotifications } from '@/hooks/use-notifications'
 import { readViteEnv } from '@/lib/client-env'
@@ -23,6 +28,21 @@ const PREF_FIELDS = [
   { key: 'league_updates', label: 'League updates' },
   { key: 'weekly_reminder', label: 'Weekly reminder' },
 ] as const
+
+async function persistPushSubscription(subscription: {
+  endpoint: string
+  toJSON?: () => { endpoint?: string; keys?: { p256dh?: string; auth?: string } }
+  getKey?: (name: 'p256dh' | 'auth') => ArrayBuffer | null
+}) {
+  const keys = serializePushSubscription(subscription)
+  const { error } = await getSupabaseClient().rpc('register_push_subscription', {
+    p_endpoint: keys.endpoint,
+    p_p256dh: keys.p256dh,
+    p_auth: keys.auth,
+    p_user_agent: navigator.userAgent,
+  })
+  if (error) throw error
+}
 
 export function ActivityPage() {
   const { user } = useAuth()
@@ -49,6 +69,45 @@ export function ActivityPage() {
       }),
     )
   }, [permission])
+
+  useEffect(() => {
+    function syncPermission() {
+      if (typeof Notification === 'undefined') return
+      setPermission(Notification.permission)
+    }
+    document.addEventListener('visibilitychange', syncPermission)
+    window.addEventListener('focus', syncPermission)
+    return () => {
+      document.removeEventListener('visibilitychange', syncPermission)
+      window.removeEventListener('focus', syncPermission)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (permission !== 'granted' || !('serviceWorker' in navigator)) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const registration = await waitForPushRegistration()
+        const existing = await registration.pushManager.getSubscription()
+        if (!existing || cancelled) return
+        setPushOk(true)
+        if (!vapidPublic) return
+        try {
+          await persistPushSubscription(existing)
+        } catch (cause) {
+          if (!cancelled) {
+            setPushError(clientErrorMessage(cause, 'Could not save this device for push.'))
+          }
+        }
+      } catch {
+        // Permission can be granted before a complete subscription exists.
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [permission, vapidPublic])
 
   const prefsQuery = useQuery({
     queryKey: ['notification-preferences', user?.id],
@@ -109,25 +168,12 @@ export function ActivityPage() {
         setPushError('Push is off. Kindling still works without it.')
         return
       }
-      const registration = await navigator.serviceWorker.ready
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: vapidPublicKeyBytes(vapidPublic),
-      })
-      const json = subscription.toJSON()
-      if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth) {
-        throw new Error('The browser did not return a complete subscription.')
-      }
-      const { error } = await getSupabaseClient().rpc('register_push_subscription', {
-        p_endpoint: json.endpoint,
-        p_p256dh: json.keys.p256dh,
-        p_auth: json.keys.auth,
-        p_user_agent: navigator.userAgent,
-      })
-      if (error) throw error
+      const registration = await waitForPushRegistration()
+      const subscription = await ensurePushSubscription(registration, vapidPublic)
+      await persistPushSubscription(subscription)
       setPushOk(true)
     } catch (cause) {
-      setPushError(cause instanceof Error ? cause.message : 'Could not enable push.')
+      setPushError(clientErrorMessage(cause, 'Could not enable push.'))
     }
   }
 
@@ -155,7 +201,7 @@ export function ActivityPage() {
           <p className="text-sm">This browser cannot receive Web Push.</p>
         ) : (
           <Button type="button" className="min-h-11" onClick={() => void enablePush()}>
-            Notify me
+            {pushOk ? 'Sync this device' : 'Notify me'}
           </Button>
         )}
         {pushOk ? (
