@@ -1,5 +1,22 @@
 const encoder = new TextEncoder()
 
+export const DEFAULT_VAPID_SUBJECT = 'https://kindling-theta.vercel.app'
+
+export function normalizeVapidPublicKey(raw: string) {
+  return raw.trim().replace(/^["']+|["']+$/g, '').replace(/\s+/g, '')
+}
+
+export function resolveVapidSubject(raw: string | undefined, fallback = DEFAULT_VAPID_SUBJECT) {
+  const value = raw?.trim() ?? ''
+  if (!/^(mailto:[^\s@]+@[^\s@]+\.[^\s@]+|https:\/\/[^\s/]+(?:\/\S*)?)$/i.test(value)) {
+    return fallback
+  }
+  if (/@localhost\b/i.test(value) || /kindling\.example/i.test(value) || /@[^@]+\.example$/i.test(value)) {
+    return fallback
+  }
+  return value
+}
+
 export type VapidKeyPair = {
   publicKey: CryptoKey
   privateKey: CryptoKey
@@ -22,7 +39,8 @@ export async function createVapidJwt(options: {
   const header = { typ: 'JWT', alg: 'ES256' }
   const payload = {
     aud: options.audience,
-    sub: options.subject,
+    sub: resolveVapidSubject(options.subject),
+    iat: now,
     exp: now + (options.expiresInSeconds ?? 12 * 60 * 60),
   }
 

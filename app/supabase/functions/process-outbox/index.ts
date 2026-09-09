@@ -1,7 +1,11 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { authorizeCronRequest } from '../_shared/cron-auth.ts'
 import { logEvent, redactForLog, requestIdFrom } from '../_shared/redact.ts'
-import { createVapidJwt } from '../_shared/web-push-vapid.ts'
+import {
+  createVapidJwt,
+  normalizeVapidPublicKey,
+  resolveVapidSubject,
+} from '../_shared/web-push-vapid.ts'
 import { encryptWebPush, pushCopyFromOutbox, urlBase64ToBytes } from '../_shared/web-push-encrypt.ts'
 
 const cors = {
@@ -42,10 +46,10 @@ Deno.serve(async (request) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
-  const vapidPublic = Deno.env.get('VAPID_PUBLIC_KEY')
+  const anonKey = Deno.env.get('ANON_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY')
+  const vapidPublic = normalizeVapidPublicKey(Deno.env.get('VAPID_PUBLIC_KEY') ?? '')
   const vapidPrivateRaw = Deno.env.get('VAPID_PRIVATE_KEY')
-  const vapidSubject = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:ops@kindling.example'
+  const vapidSubject = resolveVapidSubject(Deno.env.get('VAPID_SUBJECT'))
   if (!supabaseUrl || !serviceKey || !anonKey) {
     return json({ error: 'Server is missing Supabase credentials' }, 500)
   }
@@ -90,6 +94,7 @@ Deno.serve(async (request) => {
   let sent = 0
   let retried = 0
   let dead = 0
+  const deliveries: string[] = []
 
   for (const job of jobs) {
     try {
@@ -102,36 +107,57 @@ Deno.serve(async (request) => {
 
       const payload = pushCopyFromOutbox(job.event_type, (job.payload ?? {}) as Record<string, unknown>)
       const body = JSON.stringify(payload)
+      let delivered = 0
+      let failed = 0
       for (const sub of subs ?? []) {
-        const audience = new URL(sub.endpoint).origin
-        const token = await createVapidJwt({
-          audience,
-          subject: vapidSubject,
-          privateKey: vapidPrivate,
-        })
-        const encrypted = await encryptWebPush({
-          payload: body,
-          p256dh: sub.p256dh,
-          auth: sub.auth,
-        })
-        const response = await fetch(sub.endpoint, {
-          method: 'POST',
-          headers: {
-            Authorization: `vapid t=${token}, k=${vapidPublic}`,
-            TTL: '86400',
-            Urgency: 'normal',
-            'Content-Encoding': 'aes128gcm',
-            'Content-Type': 'application/octet-stream',
-          },
-          body: encrypted,
-        })
-        if (response.status === 404 || response.status === 410) {
-          await service.rpc('revoke_push_endpoint', { p_endpoint: sub.endpoint })
-          continue
+        const host = new URL(sub.endpoint).host
+        try {
+          const audience = new URL(sub.endpoint).origin
+          const token = await createVapidJwt({
+            audience,
+            subject: vapidSubject,
+            privateKey: vapidPrivate,
+          })
+          const encrypted = await encryptWebPush({
+            payload: body,
+            p256dh: sub.p256dh,
+            auth: sub.auth,
+          })
+          const response = await fetch(sub.endpoint, {
+            method: 'POST',
+            headers: {
+              Authorization: `vapid t=${token}, k=${vapidPublic}`,
+              TTL: '86400',
+              Urgency: 'normal',
+              'Content-Encoding': 'aes128gcm',
+              'Content-Type': 'application/octet-stream',
+            },
+            body: encrypted,
+          })
+          const reason = (await response.text()).replace(/\s+/g, ' ').slice(0, 120)
+          deliveries.push(`${host} ${response.status}${reason ? ` ${reason}` : ''}`)
+          if (response.status === 404 || response.status === 410) {
+            await service.rpc('revoke_push_endpoint', { p_endpoint: sub.endpoint })
+            continue
+          }
+          if (!response.ok) {
+            failed += 1
+            continue
+          }
+          delivered += 1
+        } catch (cause) {
+          failed += 1
+          deliveries.push(
+            `${host} ${cause instanceof Error ? cause.message : 'send failed'}`,
+          )
         }
-        if (!response.ok) {
-          throw new Error(`Push rejected (${response.status})`)
-        }
+      }
+
+      if (delivered === 0 && failed > 0) {
+        throw new Error(`Push rejected (${deliveries.slice(-failed).join('; ')})`)
+      }
+      if ((subs ?? []).length > 0 && delivered === 0) {
+        throw new Error('No active push subscriptions for this user.')
       }
 
       await service.rpc('complete_notification_outbox', {
@@ -168,5 +194,17 @@ Deno.serve(async (request) => {
     retried,
     dead,
   })
-  return json({ status: 'processed', claimed: jobs.length, sent, retried, dead })
+  return json({
+    status: 'processed',
+    claimed: jobs.length,
+    sent,
+    retried,
+    dead,
+    detail: [
+      `Claimed ${jobs.length}, sent ${sent}, dead-letter ${dead}.`,
+      deliveries.length ? deliveries.map((item) => redact(item)).join('; ') : null,
+    ]
+      .filter(Boolean)
+      .join(' '),
+  })
 })

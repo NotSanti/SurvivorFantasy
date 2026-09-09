@@ -46,7 +46,7 @@ Optional Vault copies of `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` are fine for ba
 - `CRON_SECRET` (must match Vault)
 - `VAPID_PUBLIC_KEY`
 - `VAPID_PRIVATE_KEY` (PKCS8 url-safe base64 from `node scripts/generate-vapid-keys.mjs`; paste as one line)
-- `VAPID_SUBJECT` (`mailto:` a monitored inbox, or `https://…`)
+- `VAPID_SUBJECT` (`mailto:` a real inbox, or `https://kindling-theta.vercel.app`). Placeholder `*.example` / localhost subjects are rejected by Apple with 403.
 
 `process-outbox` strips wrapping whitespace in the private key. A successful empty flush returns `{ status: "processed", claimed: 0 }`. `missing_vapid` means an Edge secret is still unset.
 
