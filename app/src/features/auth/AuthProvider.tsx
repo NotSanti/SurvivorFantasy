@@ -58,6 +58,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         if (signInError) throw signInError
       },
+      async verifyEmailOtp(email: string, token: string) {
+        if (!configured) {
+          throw new ClientEnvError(['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'])
+        }
+        const { error: verifyError } = await getSupabaseClient().auth.verifyOtp({
+          email,
+          token: token.trim(),
+          type: 'email',
+        })
+        if (verifyError) throw verifyError
+      },
       async signOut() {
         if (!configured) return
         await getSupabaseClient().auth.signOut()

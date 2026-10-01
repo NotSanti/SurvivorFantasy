@@ -8,18 +8,20 @@ import { ProductMark } from '@/components/brand/ProductMark'
 import { useAuth } from '@/features/auth/use-auth'
 
 export function WelcomePage() {
-  const { user, configured, signInWithEmail } = useAuth()
+  const { user, configured, signInWithEmail, verifyEmailOtp } = useAuth()
   const [params] = useSearchParams()
   const next = params.get('next')
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
+  const [otp, setOtp] = useState('')
+  const [step, setStep] = useState<'email' | 'code'>('email')
+  const [status, setStatus] = useState<'idle' | 'sending' | 'verifying'>('idle')
   const [error, setError] = useState<string | null>(null)
 
   if (user) {
     return <Navigate to={next && next.startsWith('/') ? next : '/leagues'} replace />
   }
 
-  async function onSubmit(event: FormEvent) {
+  async function onSendCode(event: FormEvent) {
     event.preventDefault()
     setError(null)
     setStatus('sending')
@@ -27,11 +29,40 @@ export function WelcomePage() {
       if (next?.startsWith('/')) {
         sessionStorage.setItem('sfl.auth.next', next)
       }
-      await signInWithEmail(email.trim())
-      setStatus('sent')
+      const trimmed = email.trim()
+      await signInWithEmail(trimmed)
+      setEmail(trimmed)
+      setOtp('')
+      setStep('code')
+      setStatus('idle')
     } catch (cause) {
       setStatus('idle')
-      setError(cause instanceof Error ? cause.message : 'Could not send a sign-in link.')
+      setError(cause instanceof Error ? cause.message : 'Could not send a sign-in code.')
+    }
+  }
+
+  async function onVerifyCode(event: FormEvent) {
+    event.preventDefault()
+    setError(null)
+    setStatus('verifying')
+    try {
+      await verifyEmailOtp(email.trim(), otp.trim())
+    } catch (cause) {
+      setStatus('idle')
+      setError(cause instanceof Error ? cause.message : 'That code did not work. Try again.')
+    }
+  }
+
+  async function onResend() {
+    setError(null)
+    setStatus('sending')
+    try {
+      await signInWithEmail(email.trim())
+      setOtp('')
+      setStatus('idle')
+    } catch (cause) {
+      setStatus('idle')
+      setError(cause instanceof Error ? cause.message : 'Could not resend the code.')
     }
   }
 
@@ -58,8 +89,8 @@ export function WelcomePage() {
               `VITE_SUPABASE_ANON_KEY`.
             </AlertDescription>
           </Alert>
-        ) : (
-          <form className="space-y-3" onSubmit={onSubmit}>
+        ) : step === 'email' ? (
+          <form className="space-y-3" onSubmit={(event) => void onSendCode(event)}>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -79,18 +110,73 @@ export function WelcomePage() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             ) : null}
-            {status === 'sent' ? (
-              <Alert>
-                <AlertTitle>Check your email</AlertTitle>
-                <AlertDescription>
-                  If an account exists or can be created, a sign-in link is on the way.
-                </AlertDescription>
+            <Button type="submit" className="min-h-11 w-full" disabled={status === 'sending'}>
+              {status === 'sending' ? 'Sending code…' : 'Email me a code'}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Works in the home-screen app: enter the code here after it arrives. A magic link
+              still works in a normal browser tab.
+            </p>
+          </form>
+        ) : (
+          <form className="space-y-3" onSubmit={(event) => void onVerifyCode(event)}>
+            <Alert>
+              <AlertTitle>Check your email</AlertTitle>
+              <AlertDescription>
+                Enter the 6-digit code sent to <span className="font-medium">{email}</span>. Stay
+                in this app after you copy it.
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label htmlFor="otp">Sign-in code</Label>
+              <Input
+                id="otp"
+                name="otp"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{6}"
+                maxLength={8}
+                required
+                value={otp}
+                onChange={(event) => setOtp(event.target.value.replace(/\s/g, ''))}
+                className="min-h-11 tracking-[0.3em]"
+                autoFocus
+              />
+            </div>
+            {error ? (
+              <Alert variant="destructive">
+                <AlertTitle>Could not verify</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
-            ) : (
-              <Button type="submit" className="min-h-11 w-full" disabled={status === 'sending'}>
-                {status === 'sending' ? 'Sending link…' : 'Email me a sign-in link'}
+            ) : null}
+            <Button type="submit" className="min-h-11 w-full" disabled={status === 'verifying'}>
+              {status === 'verifying' ? 'Verifying…' : 'Verify and sign in'}
+            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                className="min-h-11 flex-1"
+                disabled={status !== 'idle'}
+                onClick={() => void onResend()}
+              >
+                {status === 'sending' ? 'Resending…' : 'Resend code'}
               </Button>
-            )}
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-11 flex-1"
+                disabled={status !== 'idle'}
+                onClick={() => {
+                  setStep('email')
+                  setOtp('')
+                  setError(null)
+                  setStatus('idle')
+                }}
+              >
+                Different email
+              </Button>
+            </div>
           </form>
         )}
       </div>

@@ -8,6 +8,7 @@ export type AuthState = {
   user: User | null
   error: string | null
   signInWithEmail: (email: string) => Promise<void>
+  verifyEmailOtp: (email: string, token: string) => Promise<void>
   signOut: () => Promise<void>
 }
 

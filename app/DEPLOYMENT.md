@@ -25,6 +25,23 @@ Auth redirect URLs must include:
 - `https://kindling-theta.vercel.app/auth/callback`
 - `https://kindling-notsantis-projects.vercel.app/auth/callback`
 
+### Email OTP (home-screen / PWA sign-in)
+
+Installed PWAs cannot reliably finish magic-link redirects (iOS opens Safari in a separate storage jar). The welcome screen verifies a **6-digit email OTP** inside the app via `verifyOtp`.
+
+In [Auth → Email Templates → Magic Link](https://supabase.com/dashboard/project/ryzueuyypmdkqfufdpzs/auth/templates):
+
+1. Include `{{ .Token }}` in the body (the 6-digit code).
+2. Keep `{{ .ConfirmationURL }}` as an optional browser fallback.
+3. Disable Resend click tracking so confirmation URLs are not rewritten.
+
+Example body fragment:
+
+```html
+<p>Your SFL sign-in code is <strong>{{ .Token }}</strong>.</p>
+<p>Enter it in the app. Or open this link in a browser: <a href="{{ .ConfirmationURL }}">Sign in</a></p>
+```
+
 `vercel.json` ships CSP and security headers compatible with Supabase Realtime (`https` + `wss` to `*.supabase.co`) and the same-origin service worker.
 
 ## Supabase secrets
