@@ -9,6 +9,8 @@ export function registerPwa(handlers: PwaRegistrationHandlers) {
   const updateSW = registerSW({
     immediate: true,
     onNeedRefresh() {
+      // Installed PWAs otherwise keep a stale shell until the user taps Update.
+      void updateSW(true)
       handlers.onNeedRefresh(() => {
         void updateSW(true)
       })

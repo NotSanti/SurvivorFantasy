@@ -15,6 +15,8 @@ type CastawayPickCardProps = {
   disabled?: boolean
   /** When true, render a non-interactive pill (tribe / roster views). */
   static?: boolean
+  /** Prefer immediate image fetch (above-the-fold tribe roster). */
+  eager?: boolean
   badge?: string | null
   trailing?: ReactNode
   onClick?: () => void
@@ -38,6 +40,7 @@ export function CastawayPickCard({
   selected = false,
   disabled = false,
   static: isStatic = false,
+  eager = false,
   badge = null,
   trailing = null,
   onClick,
@@ -60,8 +63,9 @@ export function CastawayPickCard({
             src={photoUrl}
             alt=""
             className="size-full origin-top scale-125 object-cover object-top"
-            loading="lazy"
+            loading={eager ? 'eager' : 'lazy'}
             decoding="async"
+            fetchPriority={eager ? 'high' : undefined}
           />
         ) : (
           <span className="flex size-full items-center justify-center font-display text-lg text-muted-foreground">

@@ -99,7 +99,22 @@ export function useLeagueWeek(league: ActiveLeague | null) {
       const { data, error } = await getSupabaseClient()
         .from('roster_entries')
         .select(
-          'id, member_id, castaway_id, acquisition_type, slot_number, starts_episode, ends_episode',
+          `
+          id,
+          member_id,
+          castaway_id,
+          acquisition_type,
+          slot_number,
+          starts_episode,
+          ends_episode,
+          castaway:castaways (
+            id,
+            display_name,
+            status,
+            photo_url,
+            original_tribe_id
+          )
+        `,
         )
         .eq('league_id', leagueId!)
         .order('slot_number')
@@ -237,6 +252,9 @@ export function useLeagueWeek(league: ActiveLeague | null) {
     mvpQuery.isLoading ||
     castawaysQuery.isLoading ||
     ruleSetQuery.isLoading
+  /** Tribe page only needs roster + castaway identity, not standings/scores. */
+  const tribeLoading =
+    rosterQuery.isLoading || castawaysQuery.isLoading || mvpQuery.isLoading || lineScoresQuery.isLoading
   const fetching =
     membersQuery.isFetching ||
     episodeScoresQuery.isFetching ||
@@ -278,6 +296,7 @@ export function useLeagueWeek(league: ActiveLeague | null) {
     latestCorrected,
     publishedNumbers,
     loading,
+    tribeLoading,
     fetching,
     error: error instanceof Error ? error : error ? new Error('Could not load league week') : null,
     refetch: () => {

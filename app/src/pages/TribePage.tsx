@@ -11,6 +11,14 @@ import { useLeagueWeek } from '@/features/league/use-league-week'
 import { useAuth } from '@/features/auth/use-auth'
 import { getSupabaseClient } from '@/lib/supabase'
 
+type RosterCastaway = {
+  id: string
+  display_name: string
+  status: string
+  photo_url: string | null
+  original_tribe_id: string | null
+}
+
 export function TribePage() {
   const { user } = useAuth()
   const { activeLeague, loading: leagueLoading } = useActiveLeague()
@@ -29,7 +37,7 @@ export function TribePage() {
     },
   })
 
-  if (leagueLoading || (activeLeague && week.loading) || tribesQuery.isLoading) {
+  if (leagueLoading || (activeLeague && week.tribeLoading) || tribesQuery.isLoading) {
     return (
       <PageContainer>
         <LoadingState variant="spinner" label="Loading your tribe" />
@@ -56,10 +64,15 @@ export function TribePage() {
   const current = myRoster.filter((row) => row.ends_episode == null)
   const history = myRoster.filter((row) => row.ends_episode != null)
   const myMvp = (week.mvps ?? []).find((row) => row.member_id === user.id)?.castaway_id
-  const castawayOf = (id: string) => week.castaways.find((castaway) => castaway.id === id)
-  const tribeOf = (castawayId: string) => {
-    const castaway = castawayOf(castawayId)
-    const tribe = tribesQuery.data?.find((row) => row.id === castaway?.original_tribe_id)
+  const castawayOf = (entry: (typeof myRoster)[number]): RosterCastaway | undefined => {
+    const embedded = entry.castaway as RosterCastaway | RosterCastaway[] | null | undefined
+    if (Array.isArray(embedded)) return embedded[0]
+    if (embedded) return embedded
+    return week.castaways.find((castaway) => castaway.id === entry.castaway_id)
+  }
+  const tribeOf = (castaway: RosterCastaway | undefined) => {
+    if (!castaway?.original_tribe_id) return null
+    const tribe = tribesQuery.data?.find((row) => row.id === castaway.original_tribe_id)
     if (!tribe) return null
     return { name: tribe.name, colorName: tribe.color_name }
   }
@@ -101,7 +114,7 @@ export function TribePage() {
           <h2 className="font-medium">Current camp</h2>
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {current.map((entry) => {
-              const castaway = castawayOf(entry.castaway_id)
+              const castaway = castawayOf(entry)
               const points = pointsForEntry(entry.id, entry.castaway_id)
               const isMvp = myMvp === entry.castaway_id
               const badge = castaway?.status === 'eliminated' ? 'Out' : null
@@ -111,10 +124,11 @@ export function TribePage() {
                     static
                     name={castaway?.display_name ?? 'Castaway'}
                     photoUrl={castaway?.photo_url}
-                    tribe={tribeOf(entry.castaway_id)}
+                    tribe={tribeOf(castaway)}
                     selected={isMvp}
                     badge={badge}
                     trailing={scoreTrailing(points)}
+                    eager
                   />
                 </li>
               )
@@ -127,7 +141,7 @@ export function TribePage() {
           <h2 className="font-medium">Earlier on the roster</h2>
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {history.map((entry) => {
-              const castaway = castawayOf(entry.castaway_id)
+              const castaway = castawayOf(entry)
               const points = pointsForEntry(entry.id, entry.castaway_id)
               return (
                 <li key={entry.id}>
@@ -135,9 +149,10 @@ export function TribePage() {
                     static
                     name={castaway?.display_name ?? 'Castaway'}
                     photoUrl={castaway?.photo_url}
-                    tribe={tribeOf(entry.castaway_id)}
+                    tribe={tribeOf(castaway)}
                     badge={`Ep ${entry.starts_episode}–${entry.ends_episode}`}
                     trailing={scoreTrailing(points)}
+                    eager
                   />
                 </li>
               )
