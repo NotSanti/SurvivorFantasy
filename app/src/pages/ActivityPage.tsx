@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
+import { X } from 'lucide-react'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
 import { LoadingState } from '@/components/states/LoadingState'
@@ -152,6 +153,16 @@ export function ActivityPage() {
     },
   })
 
+  const dismiss = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await getSupabaseClient().rpc('dismiss_notifications', { p_ids: ids })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] })
+    },
+  })
+
   async function enablePush() {
     setPushError(null)
     try {
@@ -244,22 +255,49 @@ export function ActivityPage() {
           description="League events show up here. Push permission is never requested on first load."
         />
       ) : (
-        <ul className="space-y-2">
-          {notifications.items.map((item) => (
-            <li key={item.id}>
-              <Link
-                to={item.route.startsWith('/') ? item.route : '/league'}
-                className="block min-h-11 rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10"
-                onClick={() => {
-                  if (!item.read_at) void markRead.mutateAsync(item.id)
-                }}
-              >
-                <p className="font-medium">{item.title}</p>
-                <p className="text-sm text-muted-foreground">{item.body}</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <section className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-medium">Messages</h2>
+            <Button
+              type="button"
+              variant="ghost"
+              className="min-h-11 text-sm text-muted-foreground"
+              disabled={dismiss.isPending}
+              onClick={() =>
+                void dismiss.mutateAsync(notifications.items.map((item) => item.id))
+              }
+            >
+              Dismiss all
+            </Button>
+          </div>
+          <ul className="space-y-2">
+            {notifications.items.map((item) => (
+              <li key={item.id} className="flex gap-2">
+                <Link
+                  to={item.route.startsWith('/') ? item.route : '/league'}
+                  className="min-h-11 min-w-0 flex-1 rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10"
+                  onClick={() => {
+                    if (!item.read_at) void markRead.mutateAsync(item.id)
+                  }}
+                >
+                  <p className="font-medium">{item.title}</p>
+                  <p className="text-sm text-muted-foreground">{item.body}</p>
+                </Link>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-11 shrink-0 text-muted-foreground"
+                  aria-label={`Dismiss ${item.title}`}
+                  disabled={dismiss.isPending}
+                  onClick={() => void dismiss.mutateAsync([item.id])}
+                >
+                  <X className="size-4" aria-hidden="true" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </PageContainer>
   )

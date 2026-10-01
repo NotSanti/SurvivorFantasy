@@ -1607,6 +1607,7 @@ export type Database = {
         Returns: undefined
       }
       mark_notifications_read: { Args: { p_ids: string[] }; Returns: undefined }
+      dismiss_notifications: { Args: { p_ids: string[] }; Returns: undefined }
       publish_episode_scores: {
         Args: {
           p_episode_number: number
