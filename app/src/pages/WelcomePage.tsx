@@ -4,7 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { PRODUCT_NAME } from '@/domain/product'
+import { ProductMark } from '@/components/brand/ProductMark'
 import { useAuth } from '@/features/auth/use-auth'
 
 export function WelcomePage() {
@@ -41,8 +41,8 @@ export function WelcomePage() {
         <p className="text-sm font-medium tracking-[0.2em] text-ember uppercase">
           Private fantasy camp
         </p>
-        <h1 className="font-display text-4xl leading-tight font-semibold text-foreground">
-          {PRODUCT_NAME}
+        <h1 className="font-display text-4xl leading-tight font-semibold">
+          <ProductMark />
         </h1>
         <p className="max-w-prose text-base text-muted-foreground">
           Pick your tribe, lock a league with friends, and follow Global&apos;s weekly
