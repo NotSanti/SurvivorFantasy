@@ -1,14 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router'
-import { X } from 'lucide-react'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
 import { LoadingState } from '@/components/states/LoadingState'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { pushGate, readInstallSnapshot, type NotificationPermissionState } from '@/domain/pwa/install'
+import {
+  isInstalled,
+  pushGate,
+  readInstallSnapshot,
+  type NotificationPermissionState,
+} from '@/domain/pwa/install'
 import {
   clientErrorMessage,
   ensurePushSubscription,
@@ -16,6 +19,7 @@ import {
   waitForPushRegistration,
 } from '@/domain/push/subscribe'
 import { EDGE_VAPID_PUBLIC_KEY } from '@/domain/push/vapid-public'
+import { ActivityMessageRow } from '@/features/activity/ActivityMessageRow'
 import { useAuth } from '@/features/auth/use-auth'
 import { useNotifications } from '@/hooks/use-notifications'
 import { getSupabaseClient } from '@/lib/supabase'
@@ -54,6 +58,15 @@ export function ActivityPage() {
   const [permission, setPermission] = useState<NotificationPermissionState>(
     typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
   )
+  const [pwaInstalled, setPwaInstalled] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return isInstalled({
+      displayModeStandalone: window.matchMedia('(display-mode: standalone)').matches,
+      iosStandalone:
+        'standalone' in navigator &&
+        Boolean((navigator as Navigator & { standalone?: boolean }).standalone),
+    })
+  })
   const vapidPublic = EDGE_VAPID_PUBLIC_KEY
   const gate = useMemo(() => {
     if (typeof window === 'undefined') return { kind: 'unsupported' as const }
@@ -76,9 +89,22 @@ export function ActivityPage() {
       if (typeof Notification === 'undefined') return
       setPermission(Notification.permission)
     }
+    function syncInstalled() {
+      setPwaInstalled(
+        isInstalled({
+          displayModeStandalone: window.matchMedia('(display-mode: standalone)').matches,
+          iosStandalone:
+            'standalone' in navigator &&
+            Boolean((navigator as Navigator & { standalone?: boolean }).standalone),
+        }),
+      )
+    }
+    const media = window.matchMedia('(display-mode: standalone)')
+    media.addEventListener('change', syncInstalled)
     document.addEventListener('visibilitychange', syncPermission)
     window.addEventListener('focus', syncPermission)
     return () => {
+      media.removeEventListener('change', syncInstalled)
       document.removeEventListener('visibilitychange', syncPermission)
       window.removeEventListener('focus', syncPermission)
     }
@@ -270,31 +296,23 @@ export function ActivityPage() {
               Dismiss all
             </Button>
           </div>
+          {pwaInstalled ? (
+            <p className="text-xs text-muted-foreground">Swipe a message left to dismiss.</p>
+          ) : null}
           <ul className="space-y-2">
             {notifications.items.map((item) => (
-              <li key={item.id} className="flex gap-2">
-                <Link
-                  to={item.route.startsWith('/') ? item.route : '/league'}
-                  className="min-h-11 min-w-0 flex-1 rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10"
-                  onClick={() => {
-                    if (!item.read_at) void markRead.mutateAsync(item.id)
-                  }}
-                >
-                  <p className="font-medium">{item.title}</p>
-                  <p className="text-sm text-muted-foreground">{item.body}</p>
-                </Link>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-11 shrink-0 text-muted-foreground"
-                  aria-label={`Dismiss ${item.title}`}
-                  disabled={dismiss.isPending}
-                  onClick={() => void dismiss.mutateAsync([item.id])}
-                >
-                  <X className="size-4" aria-hidden="true" />
-                </Button>
-              </li>
+              <ActivityMessageRow
+                key={item.id}
+                id={item.id}
+                title={item.title}
+                body={item.body}
+                route={item.route}
+                read={Boolean(item.read_at)}
+                swipeToDismiss={pwaInstalled}
+                dismissPending={dismiss.isPending}
+                onOpen={() => void markRead.mutateAsync(item.id)}
+                onDismiss={() => void dismiss.mutateAsync([item.id])}
+              />
             ))}
           </ul>
         </section>
