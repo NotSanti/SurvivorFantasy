@@ -7,6 +7,8 @@ type DraftOrderWheelProps = {
   pickOrder: string[]
   labels: Record<string, string>
   userId: string
+  orderSeed?: string | null
+  roundNumber?: number
   onContinue: () => void
   continuePending?: boolean
 }
@@ -23,33 +25,40 @@ export function DraftOrderWheel({
   pickOrder,
   labels,
   userId,
+  orderSeed = null,
+  roundNumber = 1,
   onContinue,
   continuePending = false,
 }: DraftOrderWheelProps) {
   const reducedMotion = useReducedMotion()
   const myNumber = pickOrder.indexOf(userId) + 1
-  const [spinDone, setSpinDone] = useState(false)
-  const revealed = reducedMotion === true || spinDone
-  const spinTurns = useMemo(() => 4 + (hashSeed(pickOrder.join('|')) % 3), [pickOrder])
+  const spinKey = orderSeed ?? pickOrder.join('|')
+  const [completedSpinKey, setCompletedSpinKey] = useState<string | null>(null)
+  const spinDone = reducedMotion === true || completedSpinKey === spinKey
+  const revealed = spinDone
+  const spinTurns = useMemo(() => 4 + (hashSeed(spinKey) % 3), [spinKey])
 
   useEffect(() => {
     if (reducedMotion !== false) return
-    const timer = window.setTimeout(() => setSpinDone(true), 2800)
+    const timer = window.setTimeout(() => setCompletedSpinKey(spinKey), 2800)
     return () => window.clearTimeout(timer)
-  }, [reducedMotion])
+  }, [reducedMotion, spinKey])
 
   return (
     <section className="space-y-4 rounded-xl bg-card px-4 py-5 ring-1 ring-foreground/10">
       <div className="space-y-1 text-center">
-        <h2 className="font-display text-xl font-semibold">Draft order</h2>
+        <h2 className="font-display text-xl font-semibold">
+          {roundNumber > 1 ? `Round ${roundNumber} order` : 'Round order'}
+        </h2>
         <p className="text-sm text-muted-foreground">
           {revealed
-            ? 'Your pick number is ready. Continue when everyone is set.'
-            : 'Spinning the wheel to set pick order.'}
+            ? 'Your pick number for this round is ready. Continue when everyone is set.'
+            : 'Spinning the wheel to set this round’s pick order.'}
         </p>
       </div>
       <div className="relative mx-auto flex size-44 items-center justify-center">
         <motion.div
+          key={spinKey}
           className="absolute inset-0 rounded-full border-4 border-ember/40 border-t-ember"
           initial={reducedMotion ? false : { rotate: 0 }}
           animate={{ rotate: spinTurns * 360 }}
@@ -65,7 +74,7 @@ export function DraftOrderWheel({
       <ol className="space-y-2">
         {pickOrder.map((id, index) => (
           <li
-            key={id}
+            key={`${spinKey}-${id}`}
             className={cn(
               'flex min-h-11 items-center justify-between rounded-xl px-3 py-2 ring-1 ring-foreground/10',
               id === userId ? 'bg-ember/15 ring-ember/40' : 'bg-background/40',

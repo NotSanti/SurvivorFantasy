@@ -35,6 +35,19 @@ export function draftCurrentTribeId(
   return tribeOrder[((pass % t) + t) % t] ?? null
 }
 
+/** True when the next pick starts a new member pass (round boundary after index advances). */
+export function isDraftRoundBoundary(pickOrder: string[], currentPickIndex: number): boolean {
+  const n = pickOrder.length
+  return n > 0 && currentPickIndex > 0 && currentPickIndex % n === 0
+}
+
+/** 1-based round number for the pick about to happen at currentPickIndex. */
+export function draftRoundNumber(pickOrder: string[], currentPickIndex: number): number {
+  const n = pickOrder.length
+  if (n === 0) return 1
+  return Math.floor(currentPickIndex / n) + 1
+}
+
 export function draftPickNumber(pickOrder: string[], userId: string): number | null {
   const index = pickOrder.indexOf(userId)
   return index >= 0 ? index + 1 : null

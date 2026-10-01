@@ -4,7 +4,9 @@ import {
   draftCurrentMemberId,
   draftCurrentTribeId,
   draftPickNumber,
+  draftRoundNumber,
   isCastawayClaimedOut,
+  isDraftRoundBoundary,
   MAX_CASTAWAY_CLAIMS,
 } from '@/domain/draft/turn'
 
@@ -25,6 +27,22 @@ describe('draft turn helpers', () => {
     expect(draftCurrentTribeId(tribes, order, 3)).toBe('purple')
     expect(draftCurrentTribeId(tribes, order, 5)).toBe('purple')
     expect(draftCurrentTribeId(tribes, order, 6)).toBe('yellow')
+  })
+
+  it('detects round boundaries after each full member pass', () => {
+    expect(isDraftRoundBoundary(order, 0)).toBe(false)
+    expect(isDraftRoundBoundary(order, 1)).toBe(false)
+    expect(isDraftRoundBoundary(order, 2)).toBe(false)
+    expect(isDraftRoundBoundary(order, 3)).toBe(true)
+    expect(isDraftRoundBoundary(order, 6)).toBe(true)
+  })
+
+  it('numbers rounds from the current pick index', () => {
+    expect(draftRoundNumber(order, 0)).toBe(1)
+    expect(draftRoundNumber(order, 2)).toBe(1)
+    expect(draftRoundNumber(order, 3)).toBe(2)
+    expect(draftRoundNumber(order, 5)).toBe(2)
+    expect(draftRoundNumber(order, 6)).toBe(3)
   })
 
   it('returns 1-based pick number for a member', () => {

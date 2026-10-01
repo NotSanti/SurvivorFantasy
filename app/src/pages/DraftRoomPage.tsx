@@ -11,6 +11,7 @@ import {
   claimCountsByCastaway,
   draftCurrentMemberId,
   draftCurrentTribeId,
+  draftRoundNumber,
   isCastawayClaimedOut,
   parseDraftSession,
 } from '@/domain/draft/turn'
@@ -25,7 +26,7 @@ export function DraftRoomPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [orderAckedLocally, setOrderAckedLocally] = useState(false)
+  const [ackedOrderSeed, setAckedOrderSeed] = useState<string | null>(null)
 
   useEffect(() => {
     if (leagueId) writeActiveLeagueId(leagueId)
@@ -71,6 +72,9 @@ export function DraftRoomPage() {
       return data
     },
   })
+
+  const orderSeed = sessionQuery.data?.order_seed ?? null
+  const orderAckedLocally = ackedOrderSeed != null && ackedOrderSeed === orderSeed
 
   const membersQuery = useQuery({
     queryKey: ['draft-members', leagueId],
@@ -223,7 +227,7 @@ export function DraftRoomPage() {
       return data
     },
     onSuccess: () => {
-      setOrderAckedLocally(true)
+      setAckedOrderSeed(orderSeed)
       invalidate()
     },
   })
@@ -276,11 +280,8 @@ export function DraftRoomPage() {
   })
 
   const handleOrderContinue = useCallback(() => {
-    if (!ackOrder.isPending && !ackOrder.isSuccess) {
-      void ackOrder.mutateAsync()
-    } else {
-      setOrderAckedLocally(true)
-    }
+    if (ackOrder.isPending) return
+    void ackOrder.mutateAsync()
   }, [ackOrder])
 
   const session = sessionQuery.data ? parseDraftSession(sessionQuery.data) : null
@@ -343,8 +344,8 @@ export function DraftRoomPage() {
         </p>
         <h1 className="font-display text-2xl font-semibold">Draft Room</h1>
         <p className="text-sm text-muted-foreground">
-          One pick at a time. Tribe pools alternate each pass. A castaway can join at most two
-          teams.
+          One pick at a time. Pick order re-spins after every round. Tribe pools alternate each
+          pass. A castaway can join at most two teams.
         </p>
       </div>
 
@@ -355,17 +356,23 @@ export function DraftRoomPage() {
         <ErrorState description="This draft room is not available." />
       ) : null}
 
-      {showWheel && user ? (
+      {showWheel && user && session ? (
         <DraftOrderWheel
+          key={session.orderSeed ?? session.pickOrder.join('|')}
           pickOrder={session.pickOrder}
           labels={memberLabels}
           userId={user.id}
+          orderSeed={session.orderSeed}
+          roundNumber={draftRoundNumber(session.pickOrder, session.currentPickIndex)}
           onContinue={handleOrderContinue}
           continuePending={ackOrder.isPending}
         />
       ) : null}
 
-      {session && (session.draftPhase === 'picking' || orderAckedLocally) && selecting ? (
+      {session &&
+      selecting &&
+      (session.draftPhase === 'picking' ||
+        (orderAckedLocally && session.draftPhase === 'revealing')) ? (
         <section className="space-y-2 rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10">
           {session.draftPhase === 'picking' ? (
             <>
