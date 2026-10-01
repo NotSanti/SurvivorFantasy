@@ -27,16 +27,13 @@ function renderShell(path = '/league') {
 }
 
 describe('AppShell', () => {
-  it('renders primary navigation and the unofficial disclaimer', () => {
+  it('renders primary navigation', () => {
     renderShell()
     expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'League' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Tribe' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Standings' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Activity' })).toBeInTheDocument()
-    expect(
-      screen.getByText(/not affiliated with or endorsed by survivor, cbs, corus, or global/i),
-    ).toBeInTheDocument()
     expect(screen.getByText('League body')).toBeInTheDocument()
   })
 
@@ -44,9 +41,7 @@ describe('AppShell', () => {
     const user = userEvent.setup()
     renderShell()
     await user.tab()
-    expect(screen.getByRole('link', { name: 'Kindling' })).toHaveFocus()
-    await user.tab()
-    expect(screen.getByRole('link', { name: 'Admin' })).toHaveFocus()
+    expect(screen.getByRole('link', { name: 'SFL' })).toHaveFocus()
     await user.tab()
     expect(screen.getByRole('link', { name: 'League' })).toHaveFocus()
   })

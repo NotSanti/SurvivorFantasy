@@ -23,7 +23,7 @@ registerRoute(
   ({ request, url }) =>
     request.mode === 'navigate' && url.origin === self.location.origin,
   new NetworkFirst({
-    cacheName: 'kindling-pages',
+    cacheName: 'sfl-pages',
     networkTimeoutSeconds: 4,
   }),
 )
@@ -33,7 +33,7 @@ registerRoute(
     url.origin === self.location.origin &&
     ['style', 'script', 'image', 'font'].includes(request.destination),
   new StaleWhileRevalidate({
-    cacheName: 'kindling-static',
+    cacheName: 'sfl-static',
   }),
 )
 

@@ -6,9 +6,8 @@ import type { LeagueMember, MemberEpisodePoints } from '@/domain/standings/types
 import type { ActiveLeague } from '@/features/league/active-league-context'
 import { useAuth } from '@/features/auth/use-auth'
 import { getSupabaseClient } from '@/lib/supabase'
-import type { SpoilerMode } from '@/domain/standings/types'
 
-export function useLeagueWeek(league: ActiveLeague | null, spoilerMode: SpoilerMode) {
+export function useLeagueWeek(league: ActiveLeague | null) {
   const { user } = useAuth()
   const leagueId = league?.id
   const seasonId = league?.season_id
@@ -128,7 +127,7 @@ export function useLeagueWeek(league: ActiveLeague | null, spoilerMode: SpoilerM
     queryFn: async () => {
       const { data, error } = await getSupabaseClient()
         .from('castaways')
-        .select('id, display_name, status, final_placement, eliminated_episode_number')
+        .select('id, display_name, status, final_placement, eliminated_episode_number, photo_url, original_tribe_id')
         .eq('season_id', seasonId!)
         .order('display_name')
       if (error) throw error
@@ -205,9 +204,8 @@ export function useLeagueWeek(league: ActiveLeague | null, spoilerMode: SpoilerM
         episodePoints,
         latestEpisode,
         previousEpisode,
-        spoilerMode,
       }),
-    [episodePoints, latestEpisode, members, previousEpisode, spoilerMode],
+    [episodePoints, latestEpisode, members, previousEpisode],
   )
 
   const nextAction = league

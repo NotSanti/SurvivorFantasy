@@ -20,11 +20,10 @@ export function adminClient() {
   })
 }
 
-export async function createConfirmedUser(email: string, password = 'password123') {
+export async function createConfirmedUser(email: string) {
   const admin = adminClient()
   const { data, error } = await admin.auth.admin.createUser({
     email,
-    password,
     email_confirm: true,
     user_metadata: { display_name: email.split('@')[0] },
   })
@@ -34,6 +33,10 @@ export async function createConfirmedUser(email: string, password = 'password123
   return data.user
 }
 
+/**
+ * Admin shortcut for Playwright: mint a magic-link token hash and complete
+ * `/auth/callback` without reading inbox mail.
+ */
 export async function signInViaGeneratedLink(page: Page, email: string) {
   const admin = adminClient()
   const { data, error } = await admin.auth.admin.generateLink({

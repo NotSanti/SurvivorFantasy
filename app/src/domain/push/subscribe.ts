@@ -94,7 +94,7 @@ export async function waitForPushRegistration(timeoutMs = 12_000) {
   let timer: ReturnType<typeof setTimeout> | undefined
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => {
-      reject(new Error('Kindling is still installing. Wait a moment and tap again.'))
+      reject(new Error('SFL is still installing. Wait a moment and tap again.'))
     }, timeoutMs)
   })
   try {

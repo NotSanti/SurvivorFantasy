@@ -7,15 +7,12 @@ import { NoActiveLeague } from '@/features/league/NoActiveLeague'
 import { useActiveLeague } from '@/features/league/use-active-league'
 import { useLeagueWeek } from '@/features/league/use-league-week'
 import { RankDelta } from '@/features/standings/RankDelta'
-import { SpoilerToggle } from '@/features/standings/SpoilerToggle'
 import { useAuth } from '@/features/auth/use-auth'
-import { useSpoilerMode } from '@/hooks/use-spoiler-mode'
 
 export function StandingsPage() {
   const { user } = useAuth()
   const { activeLeague, loading: leagueLoading } = useActiveLeague()
-  const { mode } = useSpoilerMode()
-  const week = useLeagueWeek(activeLeague, mode)
+  const week = useLeagueWeek(activeLeague)
 
   if (leagueLoading || (activeLeague && week.loading)) {
     return (
@@ -49,7 +46,6 @@ export function StandingsPage() {
       {week.latestCorrected ? (
         <p className="rounded-xl bg-muted px-3 py-2 text-sm">Latest published totals include a correction.</p>
       ) : null}
-      <SpoilerToggle />
       {!week.hasPublishedScores ? (
         <EmptyState
           title="No scores published"
@@ -69,9 +65,7 @@ export function StandingsPage() {
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {row.totalPoints} pts
-                  {mode === 'show' && week.latestEpisode
-                    ? ` · +${row.weeklyPoints} ep ${week.latestEpisode}`
-                    : ''}
+                  {week.latestEpisode ? ` · +${row.weeklyPoints} ep ${week.latestEpisode}` : ''}
                 </p>
               </div>
               <RankDelta delta={row.rankDelta} />

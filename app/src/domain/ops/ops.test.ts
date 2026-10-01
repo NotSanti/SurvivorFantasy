@@ -58,11 +58,11 @@ describe('cron authorization', () => {
   })
 
   it('accepts an exact match and rejects a prefix match', () => {
-    expect(authorizeCronRequest({ expectedSecret: 'kindling-cron', providedSecret: 'kindling-cron' }).ok).toBe(
+    expect(authorizeCronRequest({ expectedSecret: 'sfl-cron', providedSecret: 'sfl-cron' }).ok).toBe(
       true,
     )
     expect(
-      authorizeCronRequest({ expectedSecret: 'kindling-cron', providedSecret: 'kindling-cron-extra' }).ok,
+      authorizeCronRequest({ expectedSecret: 'sfl-cron', providedSecret: 'sfl-cron-extra' }).ok,
     ).toBe(false)
   })
 })
@@ -87,7 +87,7 @@ describe('ops health classification', () => {
 
 describe('redaction and invite leakage', () => {
   it('strips invite tokens, JWTs, and emails from log snapshots', () => {
-    const leak = 'https://kindling.example/join?token=aabbccddeeff00112233445566778899abcdef0123456789'
+    const leak = 'https://sfl.example/join?token=aabbccddeeff00112233445566778899abcdef0123456789'
     expect(containsInviteTokenLeak(leak)).toBe(true)
     const redacted = redactForLog(`Bearer eyJhbGciOiJIUzI1NiJ9.payload.sig ${leak} ops@example.com`)
     expect(containsInviteTokenLeak(redacted)).toBe(false)

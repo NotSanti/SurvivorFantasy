@@ -8,7 +8,6 @@ export type AuthState = {
   user: User | null
   error: string | null
   signInWithEmail: (email: string) => Promise<void>
-  signInWithPassword: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
 }
 

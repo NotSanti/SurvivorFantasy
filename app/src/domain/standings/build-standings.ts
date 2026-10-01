@@ -1,36 +1,38 @@
 import { compareStandingKeys, rankDelta, rankWithTies } from './rank'
 import { cumulativeThrough, pointsOnEpisode } from './totals'
-import type { LeagueMember, MemberEpisodePoints, SpoilerMode, StandingRow } from './types'
+import type { LeagueMember, MemberEpisodePoints, StandingRow } from './types'
 
 export function buildStandings(input: {
   members: LeagueMember[]
   episodePoints: MemberEpisodePoints[]
   latestEpisode: number | null
   previousEpisode: number | null
-  spoilerMode?: SpoilerMode
 }): StandingRow[] {
-  const hideLatest = input.spoilerMode === 'hide_latest_episode' && input.latestEpisode != null
-  const totalThrough = hideLatest ? input.previousEpisode : input.latestEpisode
-  const weeklyEpisode = hideLatest ? null : input.latestEpisode
-  const previousThrough = hideLatest
-    ? previousOf(input.previousEpisode)
-    : input.previousEpisode
-
   const withTotals = input.members.map((member) => ({
     ...member,
     totalPoints:
-      totalThrough == null
+      input.latestEpisode == null
         ? 0
-        : cumulativeThrough(input.episodePoints, member.leagueId, member.memberId, totalThrough),
+        : cumulativeThrough(
+            input.episodePoints,
+            member.leagueId,
+            member.memberId,
+            input.latestEpisode,
+          ),
     weeklyPoints:
-      weeklyEpisode == null
+      input.latestEpisode == null
         ? 0
-        : pointsOnEpisode(input.episodePoints, member.leagueId, member.memberId, weeklyEpisode),
+        : pointsOnEpisode(
+            input.episodePoints,
+            member.leagueId,
+            member.memberId,
+            input.latestEpisode,
+          ),
   }))
 
   const ranks = rankWithTies(withTotals)
   const previousTotals =
-    previousThrough == null
+    input.previousEpisode == null
       ? null
       : input.members.map((member) => ({
           ...member,
@@ -38,7 +40,7 @@ export function buildStandings(input: {
             input.episodePoints,
             member.leagueId,
             member.memberId,
-            previousThrough,
+            input.previousEpisode!,
           ),
         }))
   const previousRanks = previousTotals ? rankWithTies(previousTotals) : null
@@ -58,11 +60,6 @@ export function buildStandings(input: {
       }
     })
     .sort(compareStandingKeys)
-}
-
-function previousOf(episode: number | null): number | null {
-  if (episode == null || episode <= 1) return null
-  return episode - 1
 }
 
 export function lastUpdatedLabel(publishedAt: string | null | undefined): string | null {

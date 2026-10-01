@@ -24,7 +24,7 @@ const PREF_FIELDS = [
   { key: 'scores_published', label: 'Scores published' },
   { key: 'score_corrections', label: 'Score corrections' },
   { key: 'merge_window', label: 'Merge window' },
-  { key: 'draft_deadlines', label: 'Draft deadlines' },
+  { key: 'draft_deadlines', label: 'Draft turn alerts' },
   { key: 'league_updates', label: 'League updates' },
   { key: 'weekly_reminder', label: 'Weekly reminder' },
 ] as const
@@ -166,7 +166,7 @@ export function ActivityPage() {
       const nextPermission = await Notification.requestPermission()
       setPermission(nextPermission)
       if (nextPermission !== 'granted') {
-        setPushError('Push is off. Kindling still works without it.')
+        setPushError('Push is off. SFL still works without it.')
         return
       }
       const registration = await waitForPushRegistration()
@@ -192,7 +192,7 @@ export function ActivityPage() {
       <section className="space-y-2 rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10">
         <h2 className="font-medium">Push notifications</h2>
         <p className="text-sm text-muted-foreground">
-          Permission is only requested after you tap Notify me. Denying it does not break Kindling.
+          Permission is only requested after you tap Notify me. Denying it does not break SFL.
         </p>
         {gate.kind === 'need_install_ios' ? (
           <p className="text-sm">Install to Home Screen first, then return here to enable push.</p>

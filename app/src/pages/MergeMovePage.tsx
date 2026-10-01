@@ -7,21 +7,20 @@ import { LoadingState } from '@/components/states/LoadingState'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { CastawayPickCard } from '@/features/draft/CastawayPickCard'
 import { classifyMergeError, evaluateMergeMove, mergeErrorCopy } from '@/domain/merge/evaluate'
 import { aliveRosterCount, decideMergeMoveType, effectiveEpisodeAfterMerge } from '@/domain/merge/rules'
 import { NoActiveLeague } from '@/features/league/NoActiveLeague'
 import { useActiveLeague } from '@/features/league/use-active-league'
 import { useLeagueWeek } from '@/features/league/use-league-week'
 import { useAuth } from '@/features/auth/use-auth'
-import { useSpoilerMode } from '@/hooks/use-spoiler-mode'
 import { getSupabaseClient } from '@/lib/supabase'
 
 export function MergeMovePage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const { activeLeague, loading: leagueLoading } = useActiveLeague()
-  const { mode } = useSpoilerMode()
-  const week = useLeagueWeek(activeLeague, mode)
+  const week = useLeagueWeek(activeLeague)
   const [incomingId, setIncomingId] = useState<string | null>(null)
   const [outgoingId, setOutgoingId] = useState<string | null>(null)
 
@@ -34,6 +33,19 @@ export function MergeMovePage() {
         .select('id, merge_episode_number')
         .eq('id', activeLeague!.season_id)
         .single()
+      if (error) throw error
+      return data
+    },
+  })
+
+  const tribesQuery = useQuery({
+    queryKey: ['tribes', activeLeague?.season_id],
+    enabled: Boolean(activeLeague?.season_id),
+    queryFn: async () => {
+      const { data, error } = await getSupabaseClient()
+        .from('tribes')
+        .select('id, name, color_name')
+        .eq('season_id', activeLeague!.season_id)
       if (error) throw error
       return data
     },
@@ -120,6 +132,12 @@ export function MergeMovePage() {
       : null
   const nameOf = (id: string) =>
     week.castaways.find((row) => row.id === id)?.display_name ?? 'Castaway'
+  const tribeOf = (castawayId: string) => {
+    const castaway = week.castaways.find((row) => row.id === castawayId)
+    const tribe = tribesQuery.data?.find((row) => row.id === castaway?.original_tribe_id)
+    if (!tribe) return null
+    return { name: tribe.name, colorName: tribe.color_name }
+  }
   const isCommissioner = activeLeague?.commissioner_id === user?.id
   const ownedIds = new Set(current.map((row) => row.castaway_id))
   const eligibleIncoming = week.castaways.filter((row) => {
@@ -188,34 +206,35 @@ export function MergeMovePage() {
               : `Swap one pick. All ${rosterSize} are still active.`}
           </p>
           {moveType === 'swap' ? (
-            <ul className="space-y-2">
-              {current.map((entry) => (
-                <li key={entry.id}>
-                  <Button
-                    type="button"
-                    variant={outgoingId === entry.id ? 'default' : 'outline'}
-                    className="min-h-11 w-full justify-between"
-                    onClick={() => setOutgoingId(entry.id)}
-                  >
-                    {nameOf(entry.castaway_id)}
-                    {outgoingId === entry.id ? <Badge>Out</Badge> : null}
-                  </Button>
-                </li>
-              ))}
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {current.map((entry) => {
+                const castaway = week.castaways.find((row) => row.id === entry.castaway_id)
+                return (
+                  <li key={entry.id}>
+                    <CastawayPickCard
+                      name={nameOf(entry.castaway_id)}
+                      photoUrl={castaway?.photo_url}
+                      tribe={tribeOf(entry.castaway_id)}
+                      selected={outgoingId === entry.id}
+                      badge={outgoingId === entry.id ? 'Out' : null}
+                      onClick={() => setOutgoingId(entry.id)}
+                    />
+                  </li>
+                )
+              })}
             </ul>
           ) : null}
-          <ul className="space-y-2">
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {eligibleIncoming.map((castaway) => (
               <li key={castaway.id}>
-                <Button
-                  type="button"
-                  variant={incomingId === castaway.id ? 'default' : 'outline'}
-                  className="min-h-11 w-full justify-between"
+                <CastawayPickCard
+                  name={castaway.display_name}
+                  photoUrl={castaway.photo_url}
+                  tribe={tribeOf(castaway.id)}
+                  selected={incomingId === castaway.id}
+                  badge={incomingId === castaway.id ? 'In' : null}
                   onClick={() => setIncomingId(castaway.id)}
-                >
-                  {castaway.display_name}
-                  {incomingId === castaway.id ? <Badge>In</Badge> : null}
-                </Button>
+                />
               </li>
             ))}
           </ul>

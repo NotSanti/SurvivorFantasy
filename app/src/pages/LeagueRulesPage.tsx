@@ -3,16 +3,18 @@ import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
 import { LoadingState } from '@/components/states/LoadingState'
 import { PageContainer } from '@/components/layout/PageContainer'
-import { Badge } from '@/components/ui/badge'
+import { KNOWN_SCORING_RULES } from '@/domain/rules-sync/types'
 import { NoActiveLeague } from '@/features/league/NoActiveLeague'
 import { useActiveLeague } from '@/features/league/use-active-league'
 import { useLeagueWeek } from '@/features/league/use-league-week'
-import { useSpoilerMode } from '@/hooks/use-spoiler-mode'
+
+function displayRuleLabel(code: string, label: string) {
+  return KNOWN_SCORING_RULES.find((rule) => rule.code === code)?.label ?? label
+}
 
 export function LeagueRulesPage() {
   const { activeLeague, loading: leagueLoading } = useActiveLeague()
-  const { mode } = useSpoilerMode()
-  const week = useLeagueWeek(activeLeague, mode)
+  const week = useLeagueWeek(activeLeague)
 
   if (leagueLoading || (activeLeague && week.loading)) {
     return (
@@ -52,11 +54,6 @@ export function LeagueRulesPage() {
         />
       ) : (
         <section className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Version {ruleSet.version}
-            {ruleSet.pending_confirmation ? ' · pending Season 51 confirmation' : ''}
-          </p>
-          <Badge variant="secondary">{ruleSet.status}</Badge>
           <p className="text-sm">
             Roster {ruleSet.roster_size} · wildcard {ruleSet.wildcard_slots} · first scored episode{' '}
             {ruleSet.first_scored_episode}
@@ -68,12 +65,18 @@ export function LeagueRulesPage() {
           ) : null}
           <ul className="space-y-2">
             {rules.map((rule) => (
-              <li key={rule.code} className="rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10">
-                <p className="font-medium">
-                  {rule.label} · {rule.points}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {rule.kind} · {rule.phase}
+              <li
+                key={rule.code}
+                className="flex items-start justify-between gap-3 rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10"
+              >
+                <div className="min-w-0 space-y-1">
+                  <p className="font-medium">{displayRuleLabel(rule.code, rule.label)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {rule.kind.replaceAll('_', ' ')} · {rule.phase.replaceAll('_', ' ')}
+                  </p>
+                </div>
+                <p className="shrink-0 font-medium tabular-nums">
+                  {rule.points} <span className="text-muted-foreground">pts</span>
                 </p>
               </li>
             ))}

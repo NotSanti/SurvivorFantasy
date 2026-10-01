@@ -19,7 +19,7 @@ function matchKnownRule(label: string, points: number): ProposedScoringRule | nu
   if (!match) return null
   return {
     code: match.code,
-    label: normalizeText(label),
+    label: match.label,
     points: match.points,
     kind: match.kind,
     phase: match.phase,

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
 import { LoadingState } from '@/components/states/LoadingState'
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/features/auth/use-auth'
 import { writeActiveLeagueId } from '@/features/league/active-league-storage'
+import { LeagueStatusIcon } from '@/features/league/LeagueStatusIcon'
 import { getSupabaseClient } from '@/lib/supabase'
 
 export function LeagueLobbyPage() {
@@ -147,15 +148,23 @@ export function LeagueLobbyPage() {
   const recruiting = leagueQuery.data?.status === 'recruiting'
   const selecting = leagueQuery.data?.status === 'selecting'
 
+  if (selecting && leagueId) {
+    return <Navigate to={`/leagues/${leagueId}/draft`} replace />
+  }
+
   return (
     <PageContainer>
       <div className="space-y-1">
-        <h1 className="font-display text-2xl font-semibold">
-          {leagueQuery.data?.name ?? 'League'}
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-2xl font-semibold">
+            {leagueQuery.data?.name ?? 'League'}
+          </h1>
+          {leagueQuery.data?.status ? (
+            <LeagueStatusIcon status={leagueQuery.data.status} className="mt-0.5" />
+          ) : null}
+        </div>
         <p className="text-sm text-muted-foreground">
-          {membersQuery.data?.length ?? 0}/{leagueQuery.data?.max_members ?? '—'} members ·{' '}
-          {leagueQuery.data?.status?.replaceAll('_', ' ')}
+          {membersQuery.data?.length ?? 0}/{leagueQuery.data?.max_members ?? '—'} members
         </p>
       </div>
       {leagueQuery.isLoading || membersQuery.isLoading ? (

@@ -13,7 +13,7 @@ describe('web-push vapid spike', () => {
     const keys = await generateVapidKeys()
     const token = await createVapidJwt({
       audience: 'https://fcm.googleapis.com',
-      subject: 'mailto:ops@kindling.example',
+      subject: 'mailto:ops@sfl.example',
       privateKey: keys.privateKey,
     })
 
@@ -39,7 +39,7 @@ function toUrl(bytes: Uint8Array) {
 
 describe('resolveVapidSubject', () => {
   it('rejects placeholder and localhost subjects that Apple 403s', () => {
-    expect(resolveVapidSubject('mailto:ops@kindling.example')).toBe('https://kindling-theta.vercel.app')
+    expect(resolveVapidSubject('mailto:ops@sfl.example')).toBe('https://kindling-theta.vercel.app')
     expect(resolveVapidSubject('mailto:admin@localhost')).toBe('https://kindling-theta.vercel.app')
     expect(resolveVapidSubject('ops@example.com')).toBe('https://kindling-theta.vercel.app')
     expect(resolveVapidSubject('mailto:ops@example.com')).toBe('mailto:ops@example.com')

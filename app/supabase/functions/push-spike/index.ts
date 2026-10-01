@@ -4,7 +4,7 @@ Deno.serve(async () => {
   const keys = await generateVapidKeys()
   const token = await createVapidJwt({
     audience: 'https://web-push-spike.invalid',
-    subject: 'mailto:ops@kindling.example',
+    subject: 'mailto:ops@sfl.example',
     privateKey: keys.privateKey,
   })
 

@@ -7,12 +7,12 @@ export function lockScreenScoreCopy(
   if (kind === 'correction') {
     return {
       title: `Episode ${episodeNumber} totals were updated`,
-      body: 'Open Kindling to see your tribe score.',
+      body: 'Open SFL to see your tribe score.',
     }
   }
   return {
     title: `Episode ${episodeNumber} scores are in`,
-    body: 'Open Kindling to see your tribe score.',
+    body: 'Open SFL to see your tribe score.',
   }
 }
 
@@ -25,14 +25,14 @@ export function lockScreenMergeCopy(): Pick<PushPayload, 'title' | 'body'> {
 
 export function lockScreenDraftCopy(): Pick<PushPayload, 'title' | 'body'> {
   return {
-    title: 'Draft Room is waiting',
-    body: 'Finish picks, wildcard, and MVP before lock.',
+    title: "It's your turn to pick",
+    body: "Open the draft room and choose from this round's tribe.",
   }
 }
 
 export function lockScreenReminderCopy(): Pick<PushPayload, 'title' | 'body'> {
   return {
-    title: 'Kindling weekly check-in',
+    title: 'SFL weekly check-in',
     body: 'Scores and standings are ready when you are.',
   }
 }
@@ -57,15 +57,15 @@ export function pushPayloadForOutbox(input: {
   if (input.eventType === 'merge_window') {
     return { ...lockScreenMergeCopy(), url: route, tag: input.eventType }
   }
-  if (input.eventType === 'draft_deadlines') {
+  if (input.eventType === 'draft_deadlines' || input.eventType === 'draft_turn') {
     return { ...lockScreenDraftCopy(), url: route, tag: input.eventType }
   }
   if (input.eventType === 'weekly_reminder') {
     return { ...lockScreenReminderCopy(), url: route, tag: input.eventType }
   }
   return {
-    title: 'Kindling update',
-    body: 'Open Kindling for the latest from your camp.',
+    title: 'SFL update',
+    body: 'Open SFL for the latest from your camp.',
     url: route,
     tag: input.eventType,
   }
@@ -73,7 +73,7 @@ export function pushPayloadForOutbox(input: {
 
 function defaultRoute(eventType: string) {
   if (eventType === 'merge_window') return '/league/merge'
-  if (eventType === 'draft_deadlines') return '/leagues'
+  if (eventType === 'draft_deadlines' || eventType === 'draft_turn') return '/leagues'
   if (eventType === 'weekly_reminder') return '/standings'
   return '/standings'
 }

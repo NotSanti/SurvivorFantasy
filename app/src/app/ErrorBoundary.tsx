@@ -17,7 +17,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('Kindling render error', error, info.componentStack)
+    console.error('SFL render error', error, info.componentStack)
   }
 
   render() {
@@ -25,7 +25,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <main className="mx-auto flex min-h-svh max-w-lg items-center px-4">
           <ErrorState
-            title="Kindling hit a snag"
+            title="SFL hit a snag"
             description={this.state.error.message}
             onRetry={() => this.setState({ error: null })}
           />

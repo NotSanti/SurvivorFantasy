@@ -14,7 +14,7 @@ const optionalKey = z
   .transform((value) => (value === '' ? undefined : value))
 
 export const clientEnvSchema = z.object({
-  VITE_APP_NAME: z.string().trim().min(1).default('Kindling'),
+  VITE_APP_NAME: z.string().trim().min(1).default('SFL'),
   VITE_SUPABASE_URL: optionalUrl,
   VITE_SUPABASE_ANON_KEY: optionalKey,
   VITE_VAPID_PUBLIC_KEY: optionalKey,
@@ -38,7 +38,7 @@ export class ClientEnvError extends Error {
 
 export function parseClientEnv(source: ClientEnvInput): ClientEnv {
   const result = clientEnvSchema.safeParse({
-    VITE_APP_NAME: source.VITE_APP_NAME || 'Kindling',
+    VITE_APP_NAME: source.VITE_APP_NAME || 'SFL',
     VITE_SUPABASE_URL: source.VITE_SUPABASE_URL,
     VITE_SUPABASE_ANON_KEY: source.VITE_SUPABASE_ANON_KEY,
     VITE_VAPID_PUBLIC_KEY: source.VITE_VAPID_PUBLIC_KEY,

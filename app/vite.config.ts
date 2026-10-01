@@ -49,7 +49,7 @@ function applySecurityHeaders(
 
 function securityHeadersPlugin(): Plugin {
   return {
-    name: 'kindling-security-headers',
+    name: 'sfl-security-headers',
     configureServer(server) {
       applySecurityHeaders(server, true)
     },
@@ -75,15 +75,15 @@ export default defineConfig({
       includeAssets: ['icons/icon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
         id: '/',
-        name: 'Kindling',
-        short_name: 'Kindling',
+        name: 'SFL',
+        short_name: 'SFL',
         description:
           'Unofficial fan-made Survivor 51 fantasy league. Not affiliated with or endorsed by Survivor, CBS, Corus, or Global.',
         start_url: '/',
         scope: '/',
         display: 'standalone',
-        background_color: '#14211c',
-        theme_color: '#14211c',
+        background_color: '#120e0c',
+        theme_color: '#120e0c',
         icons: [
           {
             src: '/icons/icon.svg',

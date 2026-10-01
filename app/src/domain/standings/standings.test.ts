@@ -230,7 +230,7 @@ describe('buildStandings', () => {
     ])
   })
 
-  it('hides the latest episode in spoiler mode', () => {
+  it('includes the latest episode in standings totals', () => {
     const episodePoints = memberEpisodeTotals({
       roster: [entry(cam, 'aaliyah', 2), entry(river, 'alexis', 2)],
       scores: [score(2, 'aaliyah', 4), score(2, 'alexis', 1), score(3, 'aaliyah', 10), score(3, 'alexis', 1)],
@@ -241,14 +241,13 @@ describe('buildStandings', () => {
       bonusPoints: 30,
       episodeNumbers: [2, 3],
     })
-    const hidden = buildStandings({
+    const rows = buildStandings({
       members: members.slice(0, 2),
       episodePoints,
       latestEpisode: 3,
       previousEpisode: 2,
-      spoilerMode: 'hide_latest_episode',
     })
-    expect(hidden[0]).toMatchObject({ displayName: 'Camp Cam', totalPoints: 4, weeklyPoints: 0 })
+    expect(rows[0]).toMatchObject({ displayName: 'Camp Cam', totalPoints: 14, weeklyPoints: 10 })
   })
 })
 

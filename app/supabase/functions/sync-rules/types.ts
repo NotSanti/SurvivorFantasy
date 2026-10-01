@@ -5,7 +5,7 @@ export const CANONICAL_PAGE_URL = 'https://www.globaltv.com/survivor-51-fantasy-
 export const ALLOWED_HOSTS = new Set(['www.globaltv.com', 'globaltv.com'])
 export const MAX_RESPONSE_BYTES = 1_000_000
 export const FETCH_TIMEOUT_MS = 8_000
-export const DEFAULT_USER_AGENT = 'KindlingFantasy/0.1 (unofficial fan-made league; rules-sync)'
+export const DEFAULT_USER_AGENT = 'SFL/0.1 (unofficial fan-made league; rules-sync)'
 
 export type ScoringRuleKind = 'survival' | 'weekly_category' | 'placement' | 'mvp'
 export type ScoringPhase = 'pre_merge' | 'post_merge' | 'finale' | 'any'

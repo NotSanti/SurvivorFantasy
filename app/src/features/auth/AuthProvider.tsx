@@ -58,16 +58,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         if (signInError) throw signInError
       },
-      async signInWithPassword(email: string, password: string) {
-        if (!configured) {
-          throw new ClientEnvError(['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'])
-        }
-        const { error: signInError } = await getSupabaseClient().auth.signInWithPassword({
-          email,
-          password,
-        })
-        if (signInError) throw signInError
-      },
       async signOut() {
         if (!configured) return
         await getSupabaseClient().auth.signOut()

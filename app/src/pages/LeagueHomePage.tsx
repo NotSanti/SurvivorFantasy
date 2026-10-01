@@ -1,21 +1,19 @@
-import { Link } from 'react-router'
+import { Link, Navigate } from 'react-router'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
 import { LoadingState } from '@/components/states/LoadingState'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { LeagueStatusIcon } from '@/features/league/LeagueStatusIcon'
 import { NoActiveLeague } from '@/features/league/NoActiveLeague'
 import { useActiveLeague } from '@/features/league/use-active-league'
 import { useLeagueWeek } from '@/features/league/use-league-week'
 import { RankDelta } from '@/features/standings/RankDelta'
-import { SpoilerToggle } from '@/features/standings/SpoilerToggle'
-import { useSpoilerMode } from '@/hooks/use-spoiler-mode'
 
 export function LeagueHomePage() {
   const { activeLeague, loading: leagueLoading, error: leagueError } = useActiveLeague()
-  const { mode } = useSpoilerMode()
-  const week = useLeagueWeek(activeLeague, mode)
+  const week = useLeagueWeek(activeLeague)
 
   if (leagueLoading || (activeLeague && week.loading)) {
     return (
@@ -40,15 +38,25 @@ export function LeagueHomePage() {
     )
   }
 
+  if (activeLeague.status === 'selecting') {
+    return <Navigate to={`/leagues/${activeLeague.id}/draft`} replace />
+  }
+
+  const metaParts = [
+    week.lastUpdatedLabel ? `Updated ${week.lastUpdatedLabel}` : null,
+    week.fetching ? 'Updating…' : null,
+  ].filter(Boolean)
+
   return (
     <PageContainer>
       <div className="space-y-1">
-        <h1 className="font-display text-2xl font-semibold">{activeLeague.name}</h1>
-        <p className="text-sm text-muted-foreground">
-          {activeLeague.status.replaceAll('_', ' ')}
-          {week.lastUpdatedLabel ? ` · Updated ${week.lastUpdatedLabel}` : ''}
-          {week.fetching ? ' · Updating…' : ''}
-        </p>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-2xl font-semibold">{activeLeague.name}</h1>
+          <LeagueStatusIcon status={activeLeague.status} className="mt-0.5" />
+        </div>
+        {metaParts.length > 0 ? (
+          <p className="text-sm text-muted-foreground">{metaParts.join(' · ')}</p>
+        ) : null}
       </div>
       {week.error ? (
         <ErrorState description="Could not load this week’s scores." onRetry={week.refetch} />
@@ -75,7 +83,6 @@ export function LeagueHomePage() {
           </p>
         </section>
       ) : null}
-      <SpoilerToggle />
       <div className="flex flex-wrap gap-2">
         <Button asChild variant="outline" className="min-h-11">
           <Link to={`/leagues/${activeLeague.id}`}>Lobby</Link>

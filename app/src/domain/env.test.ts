@@ -9,7 +9,7 @@ import {
 describe('parseClientEnv', () => {
   it('defaults the product name and allows empty supabase keys during foundation setup', () => {
     const env = parseClientEnv({})
-    expect(env.VITE_APP_NAME).toBe('Kindling')
+    expect(env.VITE_APP_NAME).toBe('SFL')
     expect(env.VITE_SUPABASE_URL).toBeUndefined()
     expect(isSupabaseConfigured(env)).toBe(false)
   })

@@ -1,38 +1,31 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useParams } from 'react-router'
+import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
 import { LoadingState } from '@/components/states/LoadingState'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { classifyDraftError, draftErrorCopy } from '@/domain/draft/errors'
 import {
-  evaluateManualPicks,
-  manualSlotCount,
-  parseManualDistribution,
-} from '@/domain/draft/quotas'
-import { QuotaMeter } from '@/features/draft/QuotaMeter'
-import { WildcardReveal } from '@/features/draft/WildcardReveal'
+  claimCountsByCastaway,
+  draftCurrentMemberId,
+  draftCurrentTribeId,
+  isCastawayClaimedOut,
+  parseDraftSession,
+} from '@/domain/draft/turn'
+import { CastawayPickCard } from '@/features/draft/CastawayPickCard'
+import { DraftOrderWheel } from '@/features/draft/DraftOrderWheel'
 import { useAuth } from '@/features/auth/use-auth'
 import { writeActiveLeagueId } from '@/features/league/active-league-storage'
 import { getSupabaseClient } from '@/lib/supabase'
 
-function wildcardKey(leagueId: string, userId: string) {
-  const storageKey = `kindling.wildcard.${leagueId}.${userId}`
-  const existing = sessionStorage.getItem(storageKey)
-  if (existing) return existing
-  const next = crypto.randomUUID()
-  sessionStorage.setItem(storageKey, next)
-  return next
-}
-
 export function DraftRoomPage() {
   const { leagueId } = useParams()
   const { user } = useAuth()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [revealName, setRevealName] = useState<string | null>(null)
+  const [orderAckedLocally, setOrderAckedLocally] = useState(false)
 
   useEffect(() => {
     if (leagueId) writeActiveLeagueId(leagueId)
@@ -51,11 +44,57 @@ export function DraftRoomPage() {
       if (error) throw error
       const { data: ruleSet, error: ruleError } = await supabase
         .from('rule_sets')
-        .select('id, roster_size, picks_per_original_tribe')
+        .select('id, roster_size, wildcard_slots, picks_per_original_tribe')
         .eq('id', league.ruleset_version_id)
         .single()
       if (ruleError) throw ruleError
       return { league, ruleSet }
+    },
+  })
+
+  const sessionQuery = useQuery({
+    queryKey: ['draft-session', leagueId],
+    enabled: Boolean(leagueId),
+    refetchInterval: (query) => {
+      const phase = query.state.data?.draft_phase
+      return phase === 'picking' || phase === 'revealing' ? 2000 : false
+    },
+    queryFn: async () => {
+      const { data, error } = await getSupabaseClient()
+        .from('selection_sessions')
+        .select(
+          'league_id, pick_order, tribe_order, current_pick_index, draft_phase, order_seed, locked_at, rule_set_id, started_at',
+        )
+        .eq('league_id', leagueId!)
+        .maybeSingle()
+      if (error) throw error
+      return data
+    },
+  })
+
+  const membersQuery = useQuery({
+    queryKey: ['draft-members', leagueId],
+    enabled: Boolean(leagueId),
+    queryFn: async () => {
+      const supabase = getSupabaseClient()
+      const { data: members, error } = await supabase
+        .from('league_members')
+        .select('user_id, ready_at, status')
+        .eq('league_id', leagueId!)
+        .eq('status', 'active')
+      if (error) throw error
+      const ids = members.map((row) => row.user_id)
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, display_name')
+        .in('id', ids)
+      if (profileError) throw profileError
+      const names = Object.fromEntries(profiles.map((row) => [row.id, row.display_name]))
+      return members.map((row) => ({
+        userId: row.user_id,
+        readyAt: row.ready_at,
+        displayName: names[row.user_id] ?? 'Member',
+      }))
     },
   })
 
@@ -65,7 +104,7 @@ export function DraftRoomPage() {
     queryFn: async () => {
       const { data, error } = await getSupabaseClient()
         .from('tribes')
-        .select('id, name, sort_order')
+        .select('id, name, color_name, color_token, sort_order')
         .eq('season_id', leagueQuery.data!.league.season_id)
         .order('sort_order')
       if (error) throw error
@@ -79,7 +118,7 @@ export function DraftRoomPage() {
     queryFn: async () => {
       const { data, error } = await getSupabaseClient()
         .from('castaways')
-        .select('id, display_name, original_tribe_id, status, season_id')
+        .select('id, display_name, original_tribe_id, status, season_id, photo_url')
         .eq('season_id', leagueQuery.data!.league.season_id)
         .eq('status', 'active')
       if (error) throw error
@@ -87,15 +126,18 @@ export function DraftRoomPage() {
     },
   })
 
-  const rosterQuery = useQuery({
-    queryKey: ['draft-roster', leagueId, user?.id],
-    enabled: Boolean(leagueId && user?.id),
+  const allRostersQuery = useQuery({
+    queryKey: ['draft-all-rosters', leagueId],
+    enabled: Boolean(leagueId),
+    refetchInterval: () =>
+      sessionQuery.data?.draft_phase === 'picking' || sessionQuery.data?.draft_phase === 'revealing'
+        ? 2000
+        : false,
     queryFn: async () => {
       const { data, error } = await getSupabaseClient()
         .from('roster_entries')
-        .select('id, castaway_id, acquisition_type, slot_number')
+        .select('id, member_id, castaway_id, acquisition_type, slot_number, ends_episode')
         .eq('league_id', leagueId!)
-        .eq('member_id', user!.id)
         .is('ends_episode', null)
         .order('slot_number')
       if (error) throw error
@@ -118,58 +160,85 @@ export function DraftRoomPage() {
     },
   })
 
-  const selfQuery = useQuery({
-    queryKey: ['draft-self', leagueId, user?.id],
-    enabled: Boolean(leagueId && user?.id),
-    queryFn: async () => {
-      const { data, error } = await getSupabaseClient()
-        .from('league_members')
-        .select('ready_at, role')
-        .eq('league_id', leagueId!)
-        .eq('user_id', user!.id)
-        .single()
+  useEffect(() => {
+    if (!leagueId) return
+    const supabase = getSupabaseClient()
+    const refreshDraft = () => {
+      void queryClient.invalidateQueries({ queryKey: ['draft-session', leagueId] })
+      void queryClient.invalidateQueries({ queryKey: ['draft-all-rosters', leagueId] })
+      void queryClient.invalidateQueries({ queryKey: ['draft-mvp', leagueId, user?.id] })
+      void queryClient.invalidateQueries({ queryKey: ['draft-members', leagueId] })
+      void queryClient.invalidateQueries({ queryKey: ['draft-league', leagueId] })
+      void queryClient.invalidateQueries({ queryKey: ['leagues', user?.id] })
+      void queryClient.refetchQueries({ queryKey: ['draft-session', leagueId] })
+      void queryClient.refetchQueries({ queryKey: ['draft-all-rosters', leagueId] })
+      void queryClient.refetchQueries({ queryKey: ['draft-league', leagueId] })
+    }
+    const channel = supabase
+      .channel(`sfl-draft-${leagueId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'selection_sessions', filter: `league_id=eq.${leagueId}` },
+        refreshDraft,
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'roster_entries', filter: `league_id=eq.${leagueId}` },
+        refreshDraft,
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'mvp_selections', filter: `league_id=eq.${leagueId}` },
+        refreshDraft,
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'leagues', filter: `id=eq.${leagueId}` },
+        refreshDraft,
+      )
+      .subscribe()
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [leagueId, queryClient, user?.id])
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ['draft-session', leagueId] })
+    void queryClient.invalidateQueries({ queryKey: ['draft-all-rosters', leagueId] })
+    void queryClient.invalidateQueries({ queryKey: ['draft-mvp', leagueId, user?.id] })
+    void queryClient.invalidateQueries({ queryKey: ['draft-members', leagueId] })
+    void queryClient.invalidateQueries({ queryKey: ['draft-league', leagueId] })
+    void queryClient.invalidateQueries({ queryKey: ['leagues', user?.id] })
+    void queryClient.refetchQueries({ queryKey: ['draft-session', leagueId] })
+    void queryClient.refetchQueries({ queryKey: ['draft-all-rosters', leagueId] })
+    void queryClient.refetchQueries({ queryKey: ['draft-league', leagueId] })
+  }
+
+  const ackOrder = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await getSupabaseClient().rpc('ack_draft_order', {
+        p_league_id: leagueId!,
+      })
       if (error) throw error
       return data
     },
+    onSuccess: () => {
+      setOrderAckedLocally(true)
+      invalidate()
+    },
   })
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ['draft-roster', leagueId, user?.id] })
-    void queryClient.invalidateQueries({ queryKey: ['draft-mvp', leagueId, user?.id] })
-    void queryClient.invalidateQueries({ queryKey: ['draft-self', leagueId, user?.id] })
-    void queryClient.invalidateQueries({ queryKey: ['league', leagueId] })
-    void queryClient.invalidateQueries({ queryKey: ['league-members', leagueId] })
-  }
-
-  const savePicks = useMutation({
-    mutationFn: async (castawayIds: string[]) => {
-      const { error } = await getSupabaseClient().rpc('save_manual_picks', {
+  const submitPick = useMutation({
+    mutationFn: async (castawayId: string) => {
+      const { error } = await getSupabaseClient().rpc('submit_draft_pick', {
         p_league_id: leagueId!,
-        p_castaway_ids: castawayIds,
+        p_castaway_id: castawayId,
       })
       if (error) throw error
     },
     onSuccess: invalidate,
   })
-  const wildcard = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await getSupabaseClient().rpc('request_wildcard', {
-        p_league_id: leagueId!,
-        p_idempotency_key: wildcardKey(leagueId!, user!.id),
-      })
-      if (error) throw error
-      return data
-    },
-    onSuccess: (data) => {
-      invalidate()
-      const selectedId =
-        data && typeof data === 'object' && 'selected_castaway_id' in data
-          ? String((data as { selected_castaway_id: string }).selected_castaway_id)
-          : null
-      const name = castawaysQuery.data?.find((row) => row.id === selectedId)?.display_name
-      if (name) setRevealName(name)
-    },
-  })
+
   const setMvp = useMutation({
     mutationFn: async (castawayId: string) => {
       const { error } = await getSupabaseClient().rpc('set_mvp', {
@@ -180,6 +249,7 @@ export function DraftRoomPage() {
     },
     onSuccess: invalidate,
   })
+
   const ready = useMutation({
     mutationFn: async (isReady: boolean) => {
       const { error } = await getSupabaseClient().rpc('set_league_ready', {
@@ -190,6 +260,7 @@ export function DraftRoomPage() {
     },
     onSuccess: invalidate,
   })
+
   const lock = useMutation({
     mutationFn: async () => {
       const { error } = await getSupabaseClient().rpc('lock_league_selection', {
@@ -197,78 +268,69 @@ export function DraftRoomPage() {
       })
       if (error) throw error
     },
-    onSuccess: invalidate,
+    onSuccess: async () => {
+      invalidate()
+      await queryClient.invalidateQueries({ queryKey: ['leagues', user?.id] })
+      navigate('/league', { replace: true })
+    },
   })
 
-  const distribution = parseManualDistribution(
-    leagueQuery.data?.ruleSet.picks_per_original_tribe,
-  )
-  const rosterRows = rosterQuery.data
-  const manual = useMemo(
-    () => (rosterRows ?? []).filter((row) => row.acquisition_type === 'manual'),
-    [rosterRows],
-  )
-  const wild = rosterRows?.find((row) => row.acquisition_type === 'wildcard')
-  const selectedIds = new Set(manual.map((row) => row.castaway_id))
+  const handleOrderContinue = useCallback(() => {
+    if (!ackOrder.isPending && !ackOrder.isSuccess) {
+      void ackOrder.mutateAsync()
+    } else {
+      setOrderAckedLocally(true)
+    }
+  }, [ackOrder])
+
+  const session = sessionQuery.data ? parseDraftSession(sessionQuery.data) : null
   const selecting = leagueQuery.data?.league.status === 'selecting'
-  const locked = Boolean(
-    leagueQuery.data?.league.status &&
-      !['recruiting', 'selecting'].includes(leagueQuery.data.league.status),
-  )
   const isCommissioner = leagueQuery.data?.league.commissioner_id === user?.id
+  const myRoster = (allRostersQuery.data ?? []).filter((row) => row.member_id === user?.id)
+  const claimCounts = useMemo(
+    () => claimCountsByCastaway(allRostersQuery.data ?? []),
+    [allRostersQuery.data],
+  )
+  const myIds = new Set(myRoster.map((row) => row.castaway_id))
+  const rosterSize = leagueQuery.data?.ruleSet.roster_size ?? 8
+  const rosterComplete = myRoster.length >= rosterSize
+  const currentMemberId = session
+    ? draftCurrentMemberId(session.pickOrder, session.currentPickIndex)
+    : null
+  const currentTribeId = session
+    ? draftCurrentTribeId(session.tribeOrder, session.pickOrder, session.currentPickIndex)
+    : null
+  const isMyTurn =
+    session?.draftPhase === 'picking' && currentMemberId === user?.id && !rosterComplete
+  const currentTribe = (tribesQuery.data ?? []).find((tribe) => tribe.id === currentTribeId)
+  const currentPickerName =
+    (membersQuery.data ?? []).find((member) => member.userId === currentMemberId)?.displayName ??
+    'another member'
+  const memberLabels = Object.fromEntries(
+    (membersQuery.data ?? []).map((member) => [member.userId, member.displayName]),
+  )
+  const selfReady = (membersQuery.data ?? []).find((member) => member.userId === user?.id)?.readyAt
   const actionError =
-    savePicks.error ?? wildcard.error ?? setMvp.error ?? ready.error ?? lock.error
+    ackOrder.error ?? submitPick.error ?? setMvp.error ?? ready.error ?? lock.error
 
-  const quota = useMemo(() => {
-    if (!distribution || !leagueQuery.data) return null
-    const picks = manual
-      .map((row) => castawaysQuery.data?.find((castaway) => castaway.id === row.castaway_id))
-      .filter((row): row is NonNullable<typeof row> => Boolean(row))
-      .map((row) => ({
-        castawayId: row.id,
-        seasonId: row.season_id,
-        originalTribeId: row.original_tribe_id,
-        status: row.status,
-      }))
-    return evaluateManualPicks(picks, leagueQuery.data.league.season_id, distribution)
-  }, [castawaysQuery.data, distribution, leagueQuery.data, manual])
+  const showWheel =
+    selecting &&
+    session?.draftPhase === 'revealing' &&
+    session.pickOrder.length > 0 &&
+    !orderAckedLocally
 
-  async function toggleCastaway(castawayId: string) {
-    if (!selecting || wild) return
-    const next = selectedIds.has(castawayId)
-      ? manual.filter((row) => row.castaway_id !== castawayId).map((row) => row.castaway_id)
-      : [...manual.map((row) => row.castaway_id), castawayId]
-    await savePicks.mutateAsync(next)
+  if (leagueQuery.data?.league.status === 'recruiting' && leagueId) {
+    return <Navigate to={`/leagues/${leagueId}`} replace />
   }
 
-  const tribes = tribesQuery.data ?? []
-  const cap = distribution?.perTribe ?? 3
-  const unassignedCastaways = (castawaysQuery.data ?? [])
-    .filter((castaway) => !castaway.original_tribe_id)
-    .slice()
-    .sort((a, b) => a.display_name.localeCompare(b.display_name))
+  if (leagueQuery.data && leagueQuery.data.league.status !== 'selecting') {
+    return <Navigate to="/league" replace />
+  }
 
-  function renderCastawayButton(
-    castaway: { id: string; display_name: string; original_tribe_id: string | null },
-    canPick: boolean,
-  ) {
-    const selected = selectedIds.has(castaway.id) || wild?.castaway_id === castaway.id
-    const isWildcard = wild?.castaway_id === castaway.id
-    return (
-      <li key={castaway.id}>
-        <Button
-          type="button"
-          variant={selected ? 'default' : 'outline'}
-          className="min-h-11 w-full justify-between"
-          aria-pressed={selected}
-          disabled={!canPick || !selecting || Boolean(wild) || savePicks.isPending}
-          onClick={() => void toggleCastaway(castaway.id)}
-        >
-          <span>{castaway.display_name}</span>
-          {isWildcard ? <Badge>Wildcard</Badge> : selected ? <Badge>Picked</Badge> : null}
-        </Button>
-      </li>
-    )
+  function tribeFor(castaway: { original_tribe_id: string | null }) {
+    const tribe = (tribesQuery.data ?? []).find((row) => row.id === castaway.original_tribe_id)
+    if (!tribe) return null
+    return { name: tribe.name, colorName: tribe.color_name }
   }
 
   return (
@@ -281,131 +343,176 @@ export function DraftRoomPage() {
         </p>
         <h1 className="font-display text-2xl font-semibold">Draft Room</h1>
         <p className="text-sm text-muted-foreground">
-          Shared pool — the same castaway can be on every roster. Other camps stay hidden until
-          lock.
+          One pick at a time. Tribe pools alternate each pass. A castaway can join at most two
+          teams.
         </p>
       </div>
-      {leagueQuery.isLoading ||
-      tribesQuery.isLoading ||
-      castawaysQuery.isLoading ||
-      rosterQuery.isLoading ? (
+
+      {leagueQuery.isLoading || sessionQuery.isLoading || castawaysQuery.isLoading ? (
         <LoadingState label="Opening draft room" />
       ) : null}
-      {leagueQuery.error ? <ErrorState description="This draft room is not available." /> : null}
-      {distribution && tribes.length > 0 ? (
-        <QuotaMeter
-          manualTotal={manual.length}
-          manualSlots={manualSlotCount(distribution)}
-          tribes={tribes.map((tribe) => ({
-            id: tribe.id,
-            name: tribe.name,
-            cap,
-            count: quota?.countsByTribe[tribe.id] ?? 0,
-          }))}
+      {leagueQuery.error || sessionQuery.error ? (
+        <ErrorState description="This draft room is not available." />
+      ) : null}
+
+      {showWheel && user ? (
+        <DraftOrderWheel
+          pickOrder={session.pickOrder}
+          labels={memberLabels}
+          userId={user.id}
+          onContinue={handleOrderContinue}
+          continuePending={ackOrder.isPending}
         />
       ) : null}
-      {(castawaysQuery.data ?? []).length === 0 && !castawaysQuery.isLoading ? (
-        <EmptyState
-          title="Season 51 cast is not in Kindling yet"
-          description="The draft room is ready. Picks stay disabled until official tribes and castaways are imported. We will not invent them."
-        />
-      ) : null}
-      {unassignedCastaways.length > 0 ? (
-        <section className="space-y-2">
-          <h2 className="font-medium">Season 51 cast</h2>
+
+      {session && (session.draftPhase === 'picking' || orderAckedLocally) && selecting ? (
+        <section className="space-y-2 rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10">
+          {session.draftPhase === 'picking' ? (
+            <>
+              <p className="font-medium">
+                {isMyTurn ? 'Your turn' : `Waiting for ${currentPickerName}`}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Active tribe: {currentTribe?.name ?? '…'}
+                {currentTribe?.color_name ? ` (${currentTribe.color_name})` : ''}
+              </p>
+            </>
+          ) : session.draftPhase === 'mvp' ? (
+            <p className="font-medium">Draft complete — choose your MVP</p>
+          ) : null}
           <p className="text-sm text-muted-foreground">
-            {unassignedCastaways.length} posted castaways. Original tribe membership is not public
-            yet, so 3/3/2 picks stay locked. We will not guess Savu or Toka assignments.
+            Your roster {myRoster.length}/{rosterSize}
           </p>
-          <ul className="grid grid-cols-1 gap-2">
-            {unassignedCastaways.map((castaway) => renderCastawayButton(castaway, false))}
-          </ul>
         </section>
       ) : null}
-      {tribes.map((tribe) => {
-        const members = (castawaysQuery.data ?? []).filter(
-          (castaway) => castaway.original_tribe_id === tribe.id,
-        )
-        return (
-          <section key={tribe.id} className="space-y-2">
-            <h2 className="font-medium">{tribe.name}</h2>
-            <ul className="grid grid-cols-1 gap-2">
-              {members.map((castaway) => renderCastawayButton(castaway, true))}
-            </ul>
-          </section>
-        )
-      })}
-      {quota?.ok && quota.complete && !wild && selecting ? (
-        <Button
-          type="button"
-          className="min-h-11"
-          disabled={wildcard.isPending}
-          onClick={() => void wildcard.mutateAsync()}
-        >
-          {wildcard.isPending ? 'Drawing wildcard…' : 'Request wildcard'}
-        </Button>
-      ) : null}
-      {wild ? (
+
+      {myRoster.length > 0 ? (
         <section className="space-y-2">
-          <h2 className="font-medium">Choose MVP</h2>
-          <p className="text-sm text-muted-foreground">
-            One of your nine, including the wildcard. 30 extra points only if they win the season.
-          </p>
-          <ul className="space-y-2">
-            {(rosterQuery.data ?? []).map((entry) => {
-              const name =
-                castawaysQuery.data?.find((row) => row.id === entry.castaway_id)?.display_name ??
-                'Castaway'
-              const isMvp = mvpQuery.data?.castaway_id === entry.castaway_id
+          <h2 className="font-medium">Your picks</h2>
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {myRoster.map((entry) => {
+              const castaway = castawaysQuery.data?.find((row) => row.id === entry.castaway_id)
               return (
                 <li key={entry.id}>
-                  <Button
-                    type="button"
-                    variant={isMvp ? 'default' : 'outline'}
-                    className="min-h-11 w-full"
-                    disabled={!selecting || setMvp.isPending}
-                    onClick={() => void setMvp.mutateAsync(entry.castaway_id)}
-                  >
-                    {name}
-                    {isMvp ? ' · MVP' : ''}
-                  </Button>
+                  <CastawayPickCard
+                    static
+                    name={castaway?.display_name ?? 'Castaway'}
+                    photoUrl={castaway?.photo_url}
+                    tribe={castaway ? tribeFor(castaway) : null}
+                    selected
+                  />
                 </li>
               )
             })}
           </ul>
         </section>
       ) : null}
-      {selecting && wild && mvpQuery.data ? (
+
+      {session?.draftPhase === 'picking' && selecting
+        ? (tribesQuery.data ?? []).map((tribe) => {
+            const members = (castawaysQuery.data ?? []).filter(
+              (castaway) => castaway.original_tribe_id === tribe.id,
+            )
+            const isActiveTribe = tribe.id === currentTribeId
+            return (
+              <section key={tribe.id} className="space-y-2">
+                <h2 className="font-medium">
+                  {tribe.name}
+                  {isActiveTribe ? ' · picking now' : ''}
+                </h2>
+                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {members.map((castaway) => {
+                    const claims = claimCounts[castaway.id] ?? 0
+                    const claimedOut = isCastawayClaimedOut(claims)
+                    const mine = myIds.has(castaway.id)
+                    const canPick =
+                      isMyTurn && isActiveTribe && !claimedOut && !mine && !submitPick.isPending
+                    return (
+                      <li key={castaway.id}>
+                        <CastawayPickCard
+                          name={castaway.display_name}
+                          photoUrl={castaway.photo_url}
+                          tribe={tribeFor(castaway)}
+                          selected={mine}
+                          disabled={!canPick}
+                          badge={
+                            mine ? 'Yours' : claimedOut ? 'Taken' : claims > 0 ? `${claims}/2` : null
+                          }
+                          onClick={canPick ? () => void submitPick.mutateAsync(castaway.id) : undefined}
+                        />
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
+            )
+          })
+        : null}
+
+      {session?.draftPhase === 'mvp' && rosterComplete ? (
+        <section className="space-y-2">
+          <h2 className="font-medium">Choose MVP</h2>
+          <p className="text-sm text-muted-foreground">
+            30 extra points only if they win the season.
+          </p>
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {myRoster.map((entry) => {
+              const castaway = castawaysQuery.data?.find((row) => row.id === entry.castaway_id)
+              const isMvp = mvpQuery.data?.castaway_id === entry.castaway_id
+              return (
+                <li key={entry.id}>
+                  <CastawayPickCard
+                    name={castaway?.display_name ?? 'Castaway'}
+                    photoUrl={castaway?.photo_url}
+                    tribe={castaway ? tribeFor(castaway) : null}
+                    selected={isMvp}
+                    disabled={!selecting || setMvp.isPending}
+                    onClick={() => void setMvp.mutateAsync(entry.castaway_id)}
+                  />
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      {selecting && session?.draftPhase === 'mvp' && rosterComplete && mvpQuery.data ? (
         <Button
           type="button"
           className="min-h-11"
-          onClick={() => void ready.mutateAsync(!selfQuery.data?.ready_at)}
+          onClick={() => void ready.mutateAsync(!selfReady)}
         >
-          {selfQuery.data?.ready_at ? 'Mark unready' : 'Mark ready'}
+          {selfReady ? 'Mark unready' : 'Mark ready'}
         </Button>
       ) : null}
-      {isCommissioner && selecting ? (
+
+      {isCommissioner && selecting && session?.draftPhase === 'mvp' ? (
         <Button
           type="button"
           variant="secondary"
           className="min-h-11"
+          disabled={lock.isPending}
           onClick={() => void lock.mutateAsync()}
         >
-          Lock league
+          {lock.isPending ? 'Locking…' : 'Lock league'}
         </Button>
       ) : null}
-      {locked ? (
-        <p className="text-sm text-muted-foreground">This league is locked. Rosters are now visible.</p>
+
+      {(castawaysQuery.data ?? []).length === 0 && !castawaysQuery.isLoading ? (
+        <EmptyState
+          title="Season 51 cast is not in SFL yet"
+          description="The draft room is ready once castaways are imported."
+        />
       ) : null}
+
       {actionError ? (
         <ErrorState
           description={draftErrorCopy(
-            classifyDraftError(actionError instanceof Error ? actionError.message : String(actionError)),
+            classifyDraftError(
+              actionError instanceof Error ? actionError.message : String(actionError),
+            ),
           )}
         />
-      ) : null}
-      {revealName ? (
-        <WildcardReveal name={revealName} onDismiss={() => setRevealName(null)} />
       ) : null}
     </PageContainer>
   )

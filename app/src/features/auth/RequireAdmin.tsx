@@ -1,23 +1,12 @@
-import { useQuery } from '@tanstack/react-query'
 import { Navigate } from 'react-router'
 import { LoadingState } from '@/components/states/LoadingState'
-import { useAuth } from '@/features/auth/use-auth'
-import { getSupabaseClient } from '@/lib/supabase'
+import { useIsAdmin } from '@/features/auth/use-is-admin'
 import type { ReactNode } from 'react'
 
 export function RequireAdmin({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
-  const adminQuery = useQuery({
-    queryKey: ['is-admin', user?.id],
-    enabled: Boolean(user),
-    queryFn: async () => {
-      const { data, error } = await getSupabaseClient().rpc('is_admin')
-      if (error) throw error
-      return Boolean(data)
-    },
-  })
+  const { isAdmin, loading } = useIsAdmin()
 
-  if (adminQuery.isPending) {
+  if (loading) {
     return (
       <main className="mx-auto flex min-h-svh max-w-lg items-center px-4">
         <LoadingState label="Checking admin access" />
@@ -25,7 +14,7 @@ export function RequireAdmin({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!adminQuery.data) {
+  if (!isAdmin) {
     return <Navigate to="/leagues" replace />
   }
 

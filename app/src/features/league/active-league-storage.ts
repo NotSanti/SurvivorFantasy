@@ -1,5 +1,5 @@
-export const ACTIVE_LEAGUE_STORAGE_KEY = 'kindling.activeLeagueId'
-export const ACTIVE_LEAGUE_EVENT = 'kindling-active-league'
+export const ACTIVE_LEAGUE_STORAGE_KEY = 'sfl.activeLeagueId'
+export const ACTIVE_LEAGUE_EVENT = 'sfl-active-league'
 
 export function readActiveLeagueId(): string | null {
   try {

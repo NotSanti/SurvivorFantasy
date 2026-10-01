@@ -1,24 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { PermissionDeniedState } from '@/components/states/PermissionDeniedState'
 import { LoadingState } from '@/components/states/LoadingState'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/use-auth'
+import { useIsAdmin } from '@/features/auth/use-is-admin'
 import { AdminRulesPage } from '@/pages/AdminRulesPage'
 import { getSupabaseClient } from '@/lib/supabase'
 
 export function AdminPage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const adminQuery = useQuery({
-    queryKey: ['is-admin', user?.id],
-    enabled: Boolean(user),
-    queryFn: async () => {
-      const { data, error } = await getSupabaseClient().rpc('is_admin')
-      if (error) throw error
-      return Boolean(data)
-    },
-  })
+  const { isAdmin, loading } = useIsAdmin()
   const claim = useMutation({
     mutationFn: async () => {
       const { data, error } = await getSupabaseClient().rpc('claim_first_admin')
@@ -30,7 +23,7 @@ export function AdminPage() {
     },
   })
 
-  if (adminQuery.isPending) {
+  if (loading) {
     return (
       <PageContainer className="justify-center">
         <LoadingState label="Checking admin access" />
@@ -38,7 +31,7 @@ export function AdminPage() {
     )
   }
 
-  if (adminQuery.data) {
+  if (isAdmin) {
     return <AdminRulesPage />
   }
 
@@ -46,7 +39,7 @@ export function AdminPage() {
     <PageContainer>
       <PermissionDeniedState
         title="Admin access required"
-        description="Rules sync, aliases, and confirmation are limited to Kindling admins. If this camp has no admin yet, you can claim the first seat."
+        description="Rules sync, aliases, and confirmation are limited to SFL admins. If this camp has no admin yet, you can claim the first seat."
       />
       <Button type="button" className="min-h-11" onClick={() => void claim.mutateAsync()}>
         {claim.isPending ? 'Claiming…' : 'Claim first admin seat'}

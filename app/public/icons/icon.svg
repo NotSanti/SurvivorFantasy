@@ -1,5 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="Kindling">
-  <rect width="192" height="192" rx="36" fill="#14211c"/>
-  <path d="M96 40c18 28 8 44-4 56 22 2 42 18 42 42 0 26-20 42-38 42s-38-16-38-42c0-18 10-30 22-38-18-8-28-28-16-50 8 12 20 16 32-10z" fill="#c7924a"/>
-  <circle cx="96" cy="132" r="14" fill="#f3e6c8"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="SFL">
+  <rect width="192" height="192" rx="36" fill="#120e0c"/>
+  <text
+    x="96"
+    y="118"
+    text-anchor="middle"
+    font-family="ui-sans-serif, system-ui, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    font-size="72"
+    font-weight="800"
+    letter-spacing="-0.04em"
+  >
+    <tspan fill="#f5e6c0">S</tspan><tspan fill="#e07a2f">F</tspan><tspan fill="#f5e6c0">L</tspan>
+  </text>
 </svg>

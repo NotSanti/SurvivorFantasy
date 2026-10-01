@@ -11,7 +11,7 @@ export function useLeagueRealtime(leagueId?: string | null, seasonId?: string | 
     const supabase = getSupabaseClient()
     const invalidate = () => invalidateLeagueScoreQueries(queryClient, leagueId, seasonId)
     const channel = supabase
-      .channel(`kindling-league-${leagueId}`)
+      .channel(`sfl-league-${leagueId}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'episodes', filter: `season_id=eq.${seasonId}` },
@@ -30,6 +30,16 @@ export function useLeagueRealtime(leagueId?: string | null, seasonId?: string | 
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'roster_entries', filter: `league_id=eq.${leagueId}` },
+        invalidate,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'selection_sessions',
+          filter: `league_id=eq.${leagueId}`,
+        },
         invalidate,
       )
       .on(

@@ -5,6 +5,7 @@ import { ErrorState } from '@/components/states/ErrorState'
 import { LoadingState } from '@/components/states/LoadingState'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { Button } from '@/components/ui/button'
+import { LeagueStatusIcon } from '@/features/league/LeagueStatusIcon'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAuth } from '@/features/auth/use-auth'
 import { writeActiveLeagueId } from '@/features/league/active-league-storage'
@@ -50,11 +51,11 @@ export function LeagueListPage() {
           <li key={league.id}>
             <Link
               to={`/leagues/${league.id}`}
-              className="flex min-h-11 items-center justify-between rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10"
+              className="flex min-h-11 items-center gap-2 rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10"
               onClick={() => writeActiveLeagueId(league.id)}
             >
-              <span>{league.name}</span>
-              <span className="text-xs text-muted-foreground">{league.status}</span>
+              <span className="min-w-0 flex-1 truncate">{league.name}</span>
+              <LeagueStatusIcon status={league.status} />
             </Link>
           </li>
         ))}

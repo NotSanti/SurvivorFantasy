@@ -1,21 +1,35 @@
+import { useQuery } from '@tanstack/react-query'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
 import { LoadingState } from '@/components/states/LoadingState'
 import { PageContainer } from '@/components/layout/PageContainer'
-import { Badge } from '@/components/ui/badge'
+import { CastawayPickCard } from '@/features/draft/CastawayPickCard'
+import { FantasyTribeHeader } from '@/features/league/FantasyTribeHeader'
 import { NoActiveLeague } from '@/features/league/NoActiveLeague'
 import { useActiveLeague } from '@/features/league/use-active-league'
 import { useLeagueWeek } from '@/features/league/use-league-week'
 import { useAuth } from '@/features/auth/use-auth'
-import { useSpoilerMode } from '@/hooks/use-spoiler-mode'
+import { getSupabaseClient } from '@/lib/supabase'
 
 export function TribePage() {
   const { user } = useAuth()
   const { activeLeague, loading: leagueLoading } = useActiveLeague()
-  const { mode } = useSpoilerMode()
-  const week = useLeagueWeek(activeLeague, mode)
+  const week = useLeagueWeek(activeLeague)
 
-  if (leagueLoading || (activeLeague && week.loading)) {
+  const tribesQuery = useQuery({
+    queryKey: ['tribes', activeLeague?.season_id],
+    enabled: Boolean(activeLeague?.season_id),
+    queryFn: async () => {
+      const { data, error } = await getSupabaseClient()
+        .from('tribes')
+        .select('id, name, color_name')
+        .eq('season_id', activeLeague!.season_id)
+      if (error) throw error
+      return data
+    },
+  })
+
+  if (leagueLoading || (activeLeague && week.loading) || tribesQuery.isLoading) {
     return (
       <PageContainer>
         <LoadingState label="Loading your tribe" />
@@ -30,23 +44,49 @@ export function TribePage() {
       </PageContainer>
     )
   }
+  if (!user) {
+    return (
+      <PageContainer>
+        <LoadingState label="Loading your tribe" />
+      </PageContainer>
+    )
+  }
 
-  const myRoster = (week.roster ?? []).filter((row) => row.member_id === user?.id)
+  const myRoster = (week.roster ?? []).filter((row) => row.member_id === user.id)
   const current = myRoster.filter((row) => row.ends_episode == null)
   const history = myRoster.filter((row) => row.ends_episode != null)
-  const myMvp = (week.mvps ?? []).find((row) => row.member_id === user?.id)?.castaway_id
-  const nameOf = (id: string) =>
-    week.castaways.find((castaway) => castaway.id === id)?.display_name ?? 'Castaway'
-  const statusOf = (id: string) =>
-    week.castaways.find((castaway) => castaway.id === id)?.status ?? 'active'
+  const myMvp = (week.mvps ?? []).find((row) => row.member_id === user.id)?.castaway_id
+  const castawayOf = (id: string) => week.castaways.find((castaway) => castaway.id === id)
+  const tribeOf = (castawayId: string) => {
+    const castaway = castawayOf(castawayId)
+    const tribe = tribesQuery.data?.find((row) => row.id === castaway?.original_tribe_id)
+    if (!tribe) return null
+    return { name: tribe.name, colorName: tribe.color_name }
+  }
+  const rosterSize = week.ruleSet?.roster_size ?? 8
+  const pointsForEntry = (rosterEntryId: string, castawayId: string) =>
+    (week.lineScores ?? [])
+      .filter(
+        (line) =>
+          line.member_id === user.id &&
+          (line.roster_entry_id === rosterEntryId ||
+            (line.is_mvp_bonus && line.castaway_id === castawayId)),
+      )
+      .reduce((sum, line) => sum + (line.points_total ?? 0), 0)
+
+  const scoreTrailing = (points: number) => (
+    <span className="flex shrink-0 items-baseline gap-1 tabular-nums">
+      <span className="font-display text-lg leading-none font-semibold text-foreground">
+        {points}
+      </span>
+      <span className="text-[0.65rem] tracking-wide text-muted-foreground uppercase">pts</span>
+    </span>
+  )
 
   return (
     <PageContainer>
-      <div className="space-y-1">
-        <h1 className="font-display text-2xl font-semibold">My Tribe</h1>
-        <p className="text-sm text-muted-foreground">
-          Historical picks stay on the list. Points only count while that person was on your roster.
-        </p>
+      <div className="space-y-3">
+        <FantasyTribeHeader leagueId={activeLeague.id} userId={user.id} />
       </div>
       {week.error ? (
         <ErrorState description="Could not load your roster." onRetry={week.refetch} />
@@ -54,38 +94,28 @@ export function TribePage() {
       {current.length === 0 ? (
         <EmptyState
           title="Roster arrives after the draft"
-          description="Your nine-person tribe, MVP, and episode points will live here."
+          description={`Your ${rosterSize}-person tribe, MVP, and episode points will live here.`}
         />
       ) : (
         <section className="space-y-2">
           <h2 className="font-medium">Current camp</h2>
-          <ul className="space-y-2">
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {current.map((entry) => {
-              const latestLine = (week.lineScores ?? [])
-                .filter(
-                  (line) =>
-                    line.member_id === user?.id &&
-                    line.castaway_id === entry.castaway_id &&
-                    !line.is_mvp_bonus,
-                )
-                .sort((a, b) => (b.episode_number ?? 0) - (a.episode_number ?? 0))[0]
+              const castaway = castawayOf(entry.castaway_id)
+              const points = pointsForEntry(entry.id, entry.castaway_id)
+              const isMvp = myMvp === entry.castaway_id
+              const badge = castaway?.status === 'eliminated' ? 'Out' : null
               return (
-                <li
-                  key={entry.id}
-                  className="flex min-h-11 items-center justify-between rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10"
-                >
-                  <div>
-                    <p className="font-medium">{nameOf(entry.castaway_id)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {entry.acquisition_type.replaceAll('_', ' ')} · {statusOf(entry.castaway_id)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {myMvp === entry.castaway_id ? <Badge>MVP</Badge> : null}
-                    {week.hasPublishedScores && mode === 'show' && latestLine ? (
-                      <span className="text-sm">{latestLine.points_total} pts</span>
-                    ) : null}
-                  </div>
+                <li key={entry.id}>
+                  <CastawayPickCard
+                    static
+                    name={castaway?.display_name ?? 'Castaway'}
+                    photoUrl={castaway?.photo_url}
+                    tribe={tribeOf(entry.castaway_id)}
+                    selected={isMvp}
+                    badge={badge}
+                    trailing={scoreTrailing(points)}
+                  />
                 </li>
               )
             })}
@@ -95,15 +125,23 @@ export function TribePage() {
       {history.length > 0 ? (
         <section className="space-y-2">
           <h2 className="font-medium">Earlier on the roster</h2>
-          <ul className="space-y-2">
-            {history.map((entry) => (
-              <li
-                key={entry.id}
-                className="rounded-xl bg-card px-4 py-3 text-sm ring-1 ring-foreground/10"
-              >
-                {nameOf(entry.castaway_id)} · episodes {entry.starts_episode}–{entry.ends_episode}
-              </li>
-            ))}
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {history.map((entry) => {
+              const castaway = castawayOf(entry.castaway_id)
+              const points = pointsForEntry(entry.id, entry.castaway_id)
+              return (
+                <li key={entry.id}>
+                  <CastawayPickCard
+                    static
+                    name={castaway?.display_name ?? 'Castaway'}
+                    photoUrl={castaway?.photo_url}
+                    tribe={tribeOf(entry.castaway_id)}
+                    badge={`Ep ${entry.starts_episode}–${entry.ends_episode}`}
+                    trailing={scoreTrailing(points)}
+                  />
+                </li>
+              )
+            })}
           </ul>
         </section>
       ) : null}

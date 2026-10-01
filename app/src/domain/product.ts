@@ -1,8 +1,5 @@
-export const PRODUCT_NAME = 'Kindling'
-export const PRODUCT_SHORT_NAME = 'Kindling'
-
-export const UNOFFICIAL_DISCLAIMER =
-  'Unofficial fan-made fantasy game. Not affiliated with or endorsed by Survivor, CBS, Corus, or Global.'
+export const PRODUCT_NAME = 'SFL'
+export const PRODUCT_SHORT_NAME = 'SFL'
 
 export const NAV_ITEMS = [
   { to: '/league', label: 'League', id: 'league' },

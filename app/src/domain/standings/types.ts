@@ -43,5 +43,3 @@ export type StandingRow = {
   previousRank: number | null
   rankDelta: number | null
 }
-
-export type SpoilerMode = 'show' | 'hide_latest_episode'

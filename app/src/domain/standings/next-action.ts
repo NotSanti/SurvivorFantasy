@@ -42,7 +42,7 @@ export function leagueNextAction(input: {
   if (input.status === 'archived') {
     return {
       title: 'This league is archived',
-      description: 'Switch leagues from the Kindling header.',
+      description: 'Switch leagues from the SFL header.',
       to: '/leagues',
       label: 'All leagues',
     }

@@ -8,7 +8,7 @@ export function NotFoundPage() {
       <div className="w-full space-y-4">
         <ErrorState
           title="This campfire is out"
-          description="That page is not in Kindling. Head back to league home."
+          description="That page is not in SFL. Head back to league home."
         />
         <Button asChild className="min-h-11">
           <Link to="/league">Go to league</Link>

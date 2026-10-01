@@ -11,7 +11,7 @@ export function pushCopyFromOutbox(eventType: string, payload: Record<string, un
   if (eventType === 'score_corrections' && episodeNumber != null) {
     return {
       title: `Episode ${episodeNumber} totals were updated`,
-      body: 'Open Kindling to see your tribe score.',
+      body: 'Open SFL to see your tribe score.',
       url: route,
       tag: eventType,
     }
@@ -19,7 +19,7 @@ export function pushCopyFromOutbox(eventType: string, payload: Record<string, un
   if ((eventType === 'scores_published' || eventType === 'scores') && episodeNumber != null) {
     return {
       title: `Episode ${episodeNumber} scores are in`,
-      body: 'Open Kindling to see your tribe score.',
+      body: 'Open SFL to see your tribe score.',
       url: route,
       tag: eventType,
     }
@@ -32,12 +32,20 @@ export function pushCopyFromOutbox(eventType: string, payload: Record<string, un
       tag: eventType,
     }
   }
+  if (eventType === 'draft_turn' || eventType === 'draft_deadlines') {
+    return {
+      title: "It's your turn to pick",
+      body: "Open the draft room and choose from this round's tribe.",
+      url: route.startsWith('/leagues/') ? route : '/leagues',
+      tag: eventType,
+    }
+  }
   if (typeof payload.title === 'string' && typeof payload.body === 'string') {
     return { title: payload.title, body: payload.body, url: route, tag: eventType }
   }
   return {
-    title: 'Kindling update',
-    body: 'Open Kindling for the latest from your camp.',
+    title: 'SFL update',
+    body: 'Open SFL for the latest from your camp.',
     url: route,
     tag: eventType,
   }

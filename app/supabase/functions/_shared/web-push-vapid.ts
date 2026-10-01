@@ -13,7 +13,7 @@ export function resolveVapidSubject(raw: string | undefined, fallback = DEFAULT_
   if (!/^(mailto:[^\s@]+@[^\s@]+\.[^\s@]+|https:\/\/[^\s/]+(?:\/\S*)?)$/i.test(value)) {
     return fallback
   }
-  if (/@localhost\b/i.test(value) || /kindling\.example/i.test(value) || /@[^@]+\.example$/i.test(value)) {
+  if (/@localhost\b/i.test(value) || /(?:kindling|sfl)\.example/i.test(value) || /@[^@]+\.example$/i.test(value)) {
     return fallback
   }
   return value

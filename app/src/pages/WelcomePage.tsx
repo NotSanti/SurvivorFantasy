@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
-import { DisclaimerBanner } from '@/components/layout/DisclaimerBanner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,11 +8,10 @@ import { PRODUCT_NAME } from '@/domain/product'
 import { useAuth } from '@/features/auth/use-auth'
 
 export function WelcomePage() {
-  const { user, configured, signInWithEmail, signInWithPassword } = useAuth()
+  const { user, configured, signInWithEmail } = useAuth()
   const [params] = useSearchParams()
   const next = params.get('next')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
   const [error, setError] = useState<string | null>(null)
 
@@ -27,11 +25,7 @@ export function WelcomePage() {
     setStatus('sending')
     try {
       if (next?.startsWith('/')) {
-        sessionStorage.setItem('kindling.auth.next', next)
-      }
-      if (password) {
-        await signInWithPassword(email.trim(), password)
-        return
+        sessionStorage.setItem('sfl.auth.next', next)
       }
       await signInWithEmail(email.trim())
       setStatus('sent')
@@ -79,18 +73,6 @@ export function WelcomePage() {
                 className="min-h-11"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password (optional)</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="min-h-11"
-              />
-            </div>
             {error ? (
               <Alert variant="destructive">
                 <AlertTitle>Sign-in failed</AlertTitle>
@@ -101,18 +83,16 @@ export function WelcomePage() {
               <Alert>
                 <AlertTitle>Check your email</AlertTitle>
                 <AlertDescription>
-                  If an account exists or can be created, a magic link is on the way. Local
-                  development uses Mailpit at port 55424.
+                  If an account exists or can be created, a sign-in link is on the way.
                 </AlertDescription>
               </Alert>
             ) : (
               <Button type="submit" className="min-h-11 w-full" disabled={status === 'sending'}>
-                {status === 'sending' ? 'Signing in…' : password ? 'Sign in' : 'Email me a sign-in link'}
+                {status === 'sending' ? 'Sending link…' : 'Email me a sign-in link'}
               </Button>
             )}
           </form>
         )}
-        <DisclaimerBanner />
       </div>
     </main>
   )

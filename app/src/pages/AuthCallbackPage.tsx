@@ -15,8 +15,8 @@ export function AuthCallbackPage() {
     const tokenHash = url.searchParams.get('token_hash')
     const type = url.searchParams.get('type')
     const next =
-      url.searchParams.get('next') ?? sessionStorage.getItem('kindling.auth.next')
-    sessionStorage.removeItem('kindling.auth.next')
+      url.searchParams.get('next') ?? sessionStorage.getItem('sfl.auth.next')
+    sessionStorage.removeItem('sfl.auth.next')
     let cancelled = false
 
     async function complete() {
@@ -26,7 +26,7 @@ export function AuthCallbackPage() {
       } else if (tokenHash) {
         const { error: otpError } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
-          type: type === 'signup' ? 'signup' : 'magiclink',
+          type: type === 'signup' ? 'signup' : type === 'email' ? 'email' : 'magiclink',
         })
         if (otpError) throw otpError
       }

@@ -32,11 +32,11 @@ describe('parsePushPayload', () => {
 
 describe('resolveSameOriginUrl', () => {
   it('keeps in-app paths and falls back to home for a mismatched origin', () => {
-    expect(resolveSameOriginUrl('/league', 'https://kindling.app')).toBe(
-      'https://kindling.app/league',
+    expect(resolveSameOriginUrl('/league', 'https://sfl.app')).toBe(
+      'https://sfl.app/league',
     )
     expect(
-      resolveSameOriginUrl('https://other.example/x', 'https://kindling.app'),
-    ).toBe('https://kindling.app/')
+      resolveSameOriginUrl('https://other.example/x', 'https://sfl.app'),
+    ).toBe('https://sfl.app/')
   })
 })

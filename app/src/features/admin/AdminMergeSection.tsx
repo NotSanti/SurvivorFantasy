@@ -73,7 +73,7 @@ export function AdminMergeSection() {
     <section className="space-y-3">
       <h2 className="font-medium">Merge and boots</h2>
       <p className="text-sm text-muted-foreground">
-        Record the merge episode and boots only after they are confirmed. Kindling will not guess
+        Record the merge episode and boots only after they are confirmed. SFL will not guess
         them. Merge picks start scoring the following episode.
       </p>
       <p className="text-sm">

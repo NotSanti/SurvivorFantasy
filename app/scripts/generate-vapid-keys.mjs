@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Prints a VAPID key pair for Kindling Web Push.
+ * Prints a VAPID key pair for SFL Web Push.
  * Put the public key in VITE_VAPID_PUBLIC_KEY.
  * Store the private key only in Supabase Edge secrets as VAPID_PRIVATE_KEY (PKCS8 url-safe base64).
  * Never commit the private key.

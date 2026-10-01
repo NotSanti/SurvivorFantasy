@@ -41,7 +41,7 @@ export function inviteErrorCopy(reason: InviteFailureReason): { title: string; d
     case 'full':
       return {
         title: 'This league is full',
-        description: 'Every seat is taken. Kindling leagues stay private, so you will need another invite later.',
+        description: 'Every seat is taken. SFL leagues stay private, so you will need another invite later.',
       }
     case 'closed':
       return {
@@ -51,7 +51,7 @@ export function inviteErrorCopy(reason: InviteFailureReason): { title: string; d
     case 'unauthenticated':
       return {
         title: 'Sign in to join',
-        description: 'Use the magic link from your email, then return to this invite.',
+        description: 'Use the sign-in link from your email, then return to this invite.',
       }
     case 'invalid':
       return {

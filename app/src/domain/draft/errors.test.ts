@@ -9,4 +9,14 @@ describe('classifyDraftError', () => {
     )
     expect(classifyDraftError('League is locked')).toBe('locked')
   })
+
+  it('maps turn-based draft messages', () => {
+    expect(classifyDraftError('It is not your turn to pick')).toBe('not_your_turn')
+    expect(classifyDraftError('Pick must be an active castaway from the current tribe pool')).toBe(
+      'wrong_tribe',
+    )
+    expect(classifyDraftError('Castaway is already claimed by the maximum number of teams')).toBe(
+      'claim_cap',
+    )
+  })
 })

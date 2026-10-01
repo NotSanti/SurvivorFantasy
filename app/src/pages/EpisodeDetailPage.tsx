@@ -7,18 +7,14 @@ import { Badge } from '@/components/ui/badge'
 import { NoActiveLeague } from '@/features/league/NoActiveLeague'
 import { useActiveLeague } from '@/features/league/use-active-league'
 import { useLeagueWeek } from '@/features/league/use-league-week'
-import { SpoilerToggle } from '@/features/standings/SpoilerToggle'
 import { useAuth } from '@/features/auth/use-auth'
-import { useSpoilerMode } from '@/hooks/use-spoiler-mode'
 
 export function EpisodeDetailPage() {
   const { episodeNumber: raw } = useParams()
   const episodeNumber = Number(raw)
   const { user } = useAuth()
   const { activeLeague, loading: leagueLoading } = useActiveLeague()
-  const { mode, hidden } = useSpoilerMode()
-  const week = useLeagueWeek(activeLeague, mode)
-  const isLatest = week.latestEpisode === episodeNumber
+  const week = useLeagueWeek(activeLeague)
 
   if (leagueLoading || (activeLeague && week.loading)) {
     return (
@@ -51,7 +47,6 @@ export function EpisodeDetailPage() {
   const episodeMeta = week.episodes.find((episode) => episode.episode_number === episodeNumber)
   const nameOf = (id: string) =>
     week.castaways.find((castaway) => castaway.id === id)?.display_name ?? 'Castaway'
-  const hide = hidden && isLatest
 
   return (
     <PageContainer>
@@ -67,16 +62,10 @@ export function EpisodeDetailPage() {
           {episodeMeta?.status === 'corrected' ? ' This episode was corrected.' : ''}
         </p>
       </div>
-      <SpoilerToggle />
       {week.error ? (
         <ErrorState description="Could not load episode scores." onRetry={week.refetch} />
       ) : null}
-      {hide ? (
-        <EmptyState
-          title="This week is hidden"
-          description="Turn off spoiler hiding when you have watched the episode."
-        />
-      ) : lines.length === 0 ? (
+      {lines.length === 0 ? (
         <EmptyState
           title="No totals for this episode"
           description="Either scores are not imported yet, or nobody on your roster was eligible."

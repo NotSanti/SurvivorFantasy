@@ -23,7 +23,7 @@ function retainNotificationChannel(userId: string, onChange: () => void) {
     sharedNotifications = null
   }
   const channel = supabase
-    .channel(`kindling-notifications-${userId}`)
+    .channel(`sfl-notifications-${userId}`)
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
@@ -70,7 +70,7 @@ export function useNotifications() {
         void queryClient.invalidateQueries({ queryKey: ['notifications', userId] })
       })
     } catch (cause) {
-      console.error('Kindling notification realtime failed', cause)
+      console.error('SFL notification realtime failed', cause)
       return
     }
     return () => {

@@ -5,7 +5,7 @@ import { AuthProvider } from '@/features/auth/AuthProvider'
 import { WelcomePage } from '@/pages/WelcomePage'
 
 describe('WelcomePage', () => {
-  it('names the product and states it is unofficial', () => {
+  it('names the product', () => {
     render(
       <MemoryRouter>
         <AuthProvider>
@@ -13,9 +13,6 @@ describe('WelcomePage', () => {
         </AuthProvider>
       </MemoryRouter>,
     )
-    expect(screen.getByRole('heading', { name: 'Kindling' })).toBeInTheDocument()
-    expect(
-      screen.getByText(/unofficial fan-made fantasy game/i),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'SFL' })).toBeInTheDocument()
   })
 })

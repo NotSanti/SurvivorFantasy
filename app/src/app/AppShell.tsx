@@ -2,9 +2,7 @@ import { Outlet } from 'react-router'
 import { motion, useReducedMotion } from 'motion/react'
 import { AppHeader } from '@/components/layout/AppHeader'
 import { BottomNav } from '@/components/layout/BottomNav'
-import { DisclaimerBanner } from '@/components/layout/DisclaimerBanner'
 import { OfflineState } from '@/components/states/OfflineState'
-import { InstallPrompt } from '@/components/layout/InstallPrompt'
 import { ActiveLeagueProvider } from '@/features/league/ActiveLeagueProvider'
 import { useOnlineStatus } from '@/hooks/use-online-status'
 
@@ -13,9 +11,8 @@ export function AppShell() {
   const reducedMotion = useReducedMotion()
 
   return (
-    <div className="flex min-h-svh flex-col bg-background">
+    <div className="flex min-h-svh flex-col bg-transparent">
       <AppHeader />
-      <InstallPrompt />
       <main className="flex flex-1 flex-col">
         {!online ? (
           <div className="mx-auto w-full max-w-lg px-4 pt-4">
@@ -32,9 +29,6 @@ export function AppShell() {
             <Outlet />
           </ActiveLeagueProvider>
         </motion.div>
-        <div className="mx-auto w-full max-w-lg px-4 pb-3">
-          <DisclaimerBanner />
-        </div>
       </main>
       <BottomNav />
     </div>

@@ -299,6 +299,8 @@ export type Database = {
       }
       league_members: {
         Row: {
+          fantasy_tribe_color: string | null
+          fantasy_tribe_name: string | null
           joined_at: string
           league_id: string
           ready_at: string | null
@@ -307,6 +309,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          fantasy_tribe_color?: string | null
+          fantasy_tribe_name?: string | null
           joined_at?: string
           league_id: string
           ready_at?: string | null
@@ -315,6 +319,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          fantasy_tribe_color?: string | null
+          fantasy_tribe_name?: string | null
           joined_at?: string
           league_id?: string
           ready_at?: string | null
@@ -1150,22 +1156,37 @@ export type Database = {
       }
       selection_sessions: {
         Row: {
+          current_pick_index: number
+          draft_phase: string
           league_id: string
           locked_at: string | null
+          order_seed: string | null
+          pick_order: string[]
           rule_set_id: string
           started_at: string
+          tribe_order: string[]
         }
         Insert: {
+          current_pick_index?: number
+          draft_phase?: string
           league_id: string
           locked_at?: string | null
+          order_seed?: string | null
+          pick_order?: string[]
           rule_set_id: string
           started_at?: string
+          tribe_order?: string[]
         }
         Update: {
+          current_pick_index?: number
+          draft_phase?: string
           league_id?: string
           locked_at?: string | null
+          order_seed?: string | null
+          pick_order?: string[]
           rule_set_id?: string
           started_at?: string
+          tribe_order?: string[]
         }
         Relationships: [
           {
@@ -1468,6 +1489,25 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      update_fantasy_tribe: {
+        Args: { p_color: string; p_league_id: string; p_name: string }
+        Returns: {
+          fantasy_tribe_color: string | null
+          fantasy_tribe_name: string | null
+          joined_at: string
+          league_id: string
+          ready_at: string | null
+          role: Database["public"]["Enums"]["league_member_role"]
+          status: Database["public"]["Enums"]["league_member_status"]
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "league_members"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       confirm_rule_set: {
         Args: { p_rule_set_id: string }
         Returns: {
@@ -1642,6 +1682,46 @@ export type Database = {
       start_league_selection: {
         Args: { p_league_id: string }
         Returns: undefined
+      }
+      ack_draft_order: {
+        Args: { p_league_id: string }
+        Returns: {
+          current_pick_index: number
+          draft_phase: string
+          league_id: string
+          locked_at: string | null
+          order_seed: string | null
+          pick_order: string[]
+          rule_set_id: string
+          started_at: string
+          tribe_order: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "selection_sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_draft_pick: {
+        Args: { p_castaway_id: string; p_league_id: string }
+        Returns: {
+          current_pick_index: number
+          draft_phase: string
+          league_id: string
+          locked_at: string | null
+          order_seed: string | null
+          pick_order: string[]
+          rule_set_id: string
+          started_at: string
+          tribe_order: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "selection_sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       submit_merge_move: {
         Args: {
