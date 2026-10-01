@@ -9,7 +9,11 @@ type ProductMarkProps = {
 /** SFL wordmark with torch-orange F, matching the favicon. */
 export function ProductMark({ className, letterClassName }: ProductMarkProps) {
   return (
-    <span className={cn('inline-flex items-baseline', className)} aria-label={PRODUCT_NAME}>
+    <span
+      className={cn('inline-flex items-baseline', className)}
+      role="img"
+      aria-label={PRODUCT_NAME}
+    >
       <span className={cn('text-foreground', letterClassName)} aria-hidden="true">
         S
       </span>
