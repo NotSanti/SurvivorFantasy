@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Pencil } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -41,12 +41,6 @@ export function FantasyTribeHeader({ leagueId, userId }: FantasyTribeHeaderProps
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(DEFAULT_FANTASY_TRIBE_NAME)
   const [colorId, setColorId] = useState<FantasyTribeColorId>(DEFAULT_FANTASY_TRIBE_COLOR)
-
-  useEffect(() => {
-    if (!membershipQuery.data) return
-    setName(resolveFantasyTribeName(membershipQuery.data.fantasy_tribe_name))
-    setColorId(resolveFantasyTribeColorId(membershipQuery.data.fantasy_tribe_color))
-  }, [membershipQuery.data])
 
   const save = useMutation({
     mutationFn: async () => {
@@ -165,7 +159,12 @@ export function FantasyTribeHeader({ leagueId, userId }: FantasyTribeHeaderProps
         type="button"
         className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
         aria-label="Edit tribe name and color"
-        onClick={() => setEditing(true)}
+        onClick={() => {
+          setName(displayName)
+          setColorId(displayColor)
+          setEditing(true)
+          save.reset()
+        }}
       >
         <Pencil className="size-4" />
       </button>

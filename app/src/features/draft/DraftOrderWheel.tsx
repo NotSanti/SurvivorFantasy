@@ -28,15 +28,13 @@ export function DraftOrderWheel({
 }: DraftOrderWheelProps) {
   const reducedMotion = useReducedMotion()
   const myNumber = pickOrder.indexOf(userId) + 1
-  const [revealed, setRevealed] = useState(Boolean(reducedMotion))
+  const [spinDone, setSpinDone] = useState(false)
+  const revealed = reducedMotion === true || spinDone
   const spinTurns = useMemo(() => 4 + (hashSeed(pickOrder.join('|')) % 3), [pickOrder])
 
   useEffect(() => {
-    if (reducedMotion) {
-      setRevealed(true)
-      return
-    }
-    const timer = window.setTimeout(() => setRevealed(true), 2800)
+    if (reducedMotion !== false) return
+    const timer = window.setTimeout(() => setSpinDone(true), 2800)
     return () => window.clearTimeout(timer)
   }, [reducedMotion])
 
