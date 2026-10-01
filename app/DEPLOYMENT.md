@@ -27,13 +27,17 @@ Auth redirect URLs must include:
 
 ### Email OTP (home-screen / PWA sign-in)
 
-Installed PWAs cannot reliably finish magic-link redirects (iOS opens Safari in a separate storage jar). The welcome screen verifies a **6-digit email OTP** inside the app via `verifyOtp`.
+Installed PWAs cannot reliably finish magic-link redirects (iOS opens Safari in a separate storage jar). The welcome screen verifies an email OTP inside the app via `verifyOtp`.
 
 In [Auth → Email Templates → Magic Link](https://supabase.com/dashboard/project/ryzueuyypmdkqfufdpzs/auth/templates):
 
-1. Include `{{ .Token }}` in the body (the 6-digit code).
+1. Include `{{ .Token }}` in the body (the numeric OTP).
 2. Keep `{{ .ConfirmationURL }}` as an optional browser fallback.
 3. Disable Resend click tracking so confirmation URLs are not rewritten.
+
+OTP **length** is not set in the HTML template. Set it under
+[Authentication → Providers → Email](https://supabase.com/dashboard/project/ryzueuyypmdkqfufdpzs/auth/providers)
+→ **Email OTP Length** to **6**. The app only accepts a 6-digit code.
 
 Example body fragment:
 

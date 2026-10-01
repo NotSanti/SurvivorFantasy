@@ -44,9 +44,14 @@ export function WelcomePage() {
   async function onVerifyCode(event: FormEvent) {
     event.preventDefault()
     setError(null)
+    const code = otp.trim()
+    if (!/^\d{6}$/.test(code)) {
+      setError('Enter the 6-digit code from your email.')
+      return
+    }
     setStatus('verifying')
     try {
-      await verifyEmailOtp(email.trim(), otp.trim())
+      await verifyEmailOtp(email.trim(), code)
     } catch (cause) {
       setStatus('idle')
       setError(cause instanceof Error ? cause.message : 'That code did not work. Try again.')
@@ -135,10 +140,11 @@ export function WelcomePage() {
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 pattern="[0-9]{6}"
-                maxLength={8}
+                minLength={6}
+                maxLength={6}
                 required
                 value={otp}
-                onChange={(event) => setOtp(event.target.value.replace(/\s/g, ''))}
+                onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
                 className="min-h-11 tracking-[0.3em]"
                 autoFocus
               />
