@@ -230,22 +230,32 @@ export function useLeagueWeek(league: ActiveLeague | null) {
   const loading =
     membersQuery.isLoading ||
     episodeScoresQuery.isLoading ||
+    lineScoresQuery.isLoading ||
     episodesQuery.isLoading ||
     publishedQuery.isLoading ||
-    rosterQuery.isLoading
+    rosterQuery.isLoading ||
+    mvpQuery.isLoading ||
+    castawaysQuery.isLoading ||
+    ruleSetQuery.isLoading
   const fetching =
     membersQuery.isFetching ||
     episodeScoresQuery.isFetching ||
+    lineScoresQuery.isFetching ||
     publishedQuery.isFetching ||
-    rosterQuery.isFetching
+    rosterQuery.isFetching ||
+    mvpQuery.isFetching ||
+    castawaysQuery.isFetching ||
+    ruleSetQuery.isFetching
   const error =
     membersQuery.error ??
     episodeScoresQuery.error ??
+    lineScoresQuery.error ??
     episodesQuery.error ??
     publishedQuery.error ??
     rosterQuery.error ??
     mvpQuery.error ??
-    castawaysQuery.error
+    castawaysQuery.error ??
+    ruleSetQuery.error
 
   return {
     members: membersQuery.data ?? [],

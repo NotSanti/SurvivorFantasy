@@ -12,6 +12,12 @@ describe('state primitives', () => {
     expect(screen.getByRole('status', { name: 'Loading league' })).toBeInTheDocument()
   })
 
+  it('renders a spinner variant with visible label', () => {
+    render(<LoadingState variant="spinner" label="Loading your tribe" />)
+    expect(screen.getByRole('status', { name: 'Loading your tribe' })).toBeInTheDocument()
+    expect(screen.getByText('Loading your tribe')).toBeInTheDocument()
+  })
+
   it('renders empty, error, offline, and permission copy', () => {
     const { rerender } = render(
       <EmptyState title="No league yet" description="Create one to start." />,

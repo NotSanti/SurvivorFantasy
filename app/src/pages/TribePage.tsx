@@ -32,7 +32,7 @@ export function TribePage() {
   if (leagueLoading || (activeLeague && week.loading) || tribesQuery.isLoading) {
     return (
       <PageContainer>
-        <LoadingState label="Loading your tribe" />
+        <LoadingState variant="spinner" label="Loading your tribe" />
       </PageContainer>
     )
   }
@@ -47,7 +47,7 @@ export function TribePage() {
   if (!user) {
     return (
       <PageContainer>
-        <LoadingState label="Loading your tribe" />
+        <LoadingState variant="spinner" label="Loading your tribe" />
       </PageContainer>
     )
   }
