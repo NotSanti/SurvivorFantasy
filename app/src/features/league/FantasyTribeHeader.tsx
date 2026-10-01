@@ -20,9 +20,10 @@ import { cn } from 'cn'
 type FantasyTribeHeaderProps = {
   leagueId: string
   userId: string
+  totalPoints?: number
 }
 
-export function FantasyTribeHeader({ leagueId, userId }: FantasyTribeHeaderProps) {
+export function FantasyTribeHeader({ leagueId, userId, totalPoints }: FantasyTribeHeaderProps) {
   const queryClient = useQueryClient()
   const membershipQuery = useQuery({
     queryKey: ['fantasy-tribe', leagueId, userId],
@@ -67,7 +68,12 @@ export function FantasyTribeHeader({ leagueId, userId }: FantasyTribeHeaderProps
   const nameColor = fantasyTribeColorSwatch(displayColor)
 
   if (membershipQuery.isLoading) {
-    return <div className="h-10 w-48 animate-pulse rounded-md bg-muted" />
+    return (
+      <div className="flex items-center justify-between gap-3">
+        <div className="h-10 w-48 animate-pulse rounded-md bg-muted" />
+        <div className="h-8 w-16 animate-pulse rounded-md bg-muted" />
+      </div>
+    )
   }
 
   if (editing) {
@@ -148,26 +154,39 @@ export function FantasyTribeHeader({ leagueId, userId }: FantasyTribeHeaderProps
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <h1
-        className="font-display text-2xl leading-tight font-semibold"
-        style={{ color: nameColor }}
-      >
-        {displayName}
-      </h1>
-      <button
-        type="button"
-        className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
-        aria-label="Edit tribe name and color"
-        onClick={() => {
-          setName(displayName)
-          setColorId(displayColor)
-          setEditing(true)
-          save.reset()
-        }}
-      >
-        <Pencil className="size-4" />
-      </button>
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <h1
+          className="truncate font-display text-2xl leading-tight font-semibold"
+          style={{ color: nameColor }}
+        >
+          {displayName}
+        </h1>
+        <button
+          type="button"
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          aria-label="Edit tribe name and color"
+          onClick={() => {
+            setName(displayName)
+            setColorId(displayColor)
+            setEditing(true)
+            save.reset()
+          }}
+        >
+          <Pencil className="size-4" />
+        </button>
+      </div>
+      {totalPoints != null ? (
+        <span
+          className="flex shrink-0 items-baseline gap-1 tabular-nums"
+          aria-label={`${totalPoints} total points`}
+        >
+          <span className="font-display text-2xl leading-none font-semibold text-foreground">
+            {totalPoints}
+          </span>
+          <span className="text-[0.65rem] tracking-wide text-muted-foreground uppercase">pts</span>
+        </span>
+      ) : null}
     </div>
   )
 }

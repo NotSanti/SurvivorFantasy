@@ -86,6 +86,9 @@ export function TribePage() {
             (line.is_mvp_bonus && line.castaway_id === castawayId)),
       )
       .reduce((sum, line) => sum + (line.points_total ?? 0), 0)
+  const totalPoints = (week.lineScores ?? [])
+    .filter((line) => line.member_id === user.id)
+    .reduce((sum, line) => sum + (line.points_total ?? 0), 0)
 
   const scoreTrailing = (points: number) => (
     <span className="flex shrink-0 items-baseline gap-1 tabular-nums">
@@ -99,7 +102,11 @@ export function TribePage() {
   return (
     <PageContainer>
       <div className="space-y-3">
-        <FantasyTribeHeader leagueId={activeLeague.id} userId={user.id} />
+        <FantasyTribeHeader
+          leagueId={activeLeague.id}
+          userId={user.id}
+          totalPoints={totalPoints}
+        />
       </div>
       {week.error ? (
         <ErrorState description="Could not load your roster." onRetry={week.refetch} />
