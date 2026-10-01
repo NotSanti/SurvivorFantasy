@@ -384,8 +384,6 @@ export function DraftRoomPage() {
                 {currentTribe?.color_name ? ` (${currentTribe.color_name})` : ''}
               </p>
             </>
-          ) : session.draftPhase === 'mvp' ? (
-            <p className="font-medium">Draft complete — choose your MVP</p>
           ) : null}
           <p className="text-sm text-muted-foreground">
             Your roster {myRoster.length}/{rosterSize}
