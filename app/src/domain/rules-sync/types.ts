@@ -84,6 +84,8 @@ export const KNOWN_SCORING_RULES: Array<{
   code: string
   label: string
   needles: string[]
+  altNeedleSets?: string[][]
+  exclude?: string[]
   points: number
   kind: ScoringRuleKind
   phase: ScoringPhase
@@ -93,6 +95,7 @@ export const KNOWN_SCORING_RULES: Array<{
     code: 'survive_pre_merge',
     label: 'Survive a pre merge episode',
     needles: ['survive', 'pre-merge'],
+    altNeedleSets: [['survive', 'prior to the merge']],
     points: 1,
     kind: 'survival',
     phase: 'pre_merge',
@@ -111,6 +114,7 @@ export const KNOWN_SCORING_RULES: Array<{
     code: 'place_third',
     label: 'Finish third',
     needles: ['finish third'],
+    altNeedleSets: [['3rd place']],
     points: 10,
     kind: 'placement',
     phase: 'finale',
@@ -120,6 +124,7 @@ export const KNOWN_SCORING_RULES: Array<{
     code: 'place_second',
     label: 'Finish second',
     needles: ['finish second'],
+    altNeedleSets: [['2nd place']],
     points: 20,
     kind: 'placement',
     phase: 'finale',
@@ -129,6 +134,8 @@ export const KNOWN_SCORING_RULES: Array<{
     code: 'place_first',
     label: 'Win the season',
     needles: ['win the season'],
+    altNeedleSets: [['wins the game']],
+    exclude: ['mvp'],
     points: 30,
     kind: 'placement',
     phase: 'finale',
@@ -138,6 +145,7 @@ export const KNOWN_SCORING_RULES: Array<{
     code: 'mvp_win',
     label: 'MVP wins',
     needles: ['mvp wins'],
+    altNeedleSets: [['mvp', 'wins']],
     points: 30,
     kind: 'mvp',
     phase: 'finale',

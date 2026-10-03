@@ -4,6 +4,10 @@ import { ErrorState } from '@/components/states/ErrorState'
 import { LoadingState } from '@/components/states/LoadingState'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { KNOWN_SCORING_RULES } from '@/domain/rules-sync/types'
+import {
+  WEEKLY_CATEGORY_GROUPS,
+  WEEKLY_CATEGORY_NOTE,
+} from '@/domain/rules-sync/weekly-categories'
 import { NoActiveLeague } from '@/features/league/NoActiveLeague'
 import { useActiveLeague } from '@/features/league/use-active-league'
 import { useLeagueWeek } from '@/features/league/use-league-week'
@@ -81,6 +85,30 @@ export function LeagueRulesPage() {
               </li>
             ))}
           </ul>
+
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1">
+              <h2 className="font-medium">Additional weekly points</h2>
+              <p className="text-sm text-muted-foreground">{WEEKLY_CATEGORY_NOTE}</p>
+            </div>
+            {WEEKLY_CATEGORY_GROUPS.map((group) => (
+              <div key={group.points} className="space-y-2">
+                <div className="flex items-baseline justify-between gap-3">
+                  <h3 className="text-sm font-medium">{group.title}</h3>
+                  <p className="shrink-0 text-sm font-medium tabular-nums">
+                    {group.points} <span className="text-muted-foreground">pts</span>
+                  </p>
+                </div>
+                <ul className="space-y-1.5 text-sm">
+                  {group.items.map((item) => (
+                    <li key={item} className="text-muted-foreground">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </section>
       )}
     </PageContainer>

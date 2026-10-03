@@ -64,6 +64,29 @@ describe('parseResultsHtml', () => {
     expect(empty.ok).toBe(false)
   })
 
+  it('parses Season 51 totals from an image nested after a leading div', async () => {
+    const published = `<div align="center"><p>Jump to the results.</p></div>
+      <h2 id="results"><strong>Results</strong></h2>
+      <p>Remember, points begin to accumulate <strong>starting with episode 2</strong>.</p>
+      <p><strong>EPISODE 2 POINTS:</strong></p>
+      <p><a href="https://assets.globaltv.com/wp-content/uploads/2026/10/survivor-51-episode-2-points_v2.jpg"><img src="https://assets.globaltv.com/wp-content/uploads/2026/10/survivor-51-episode-2-points_v2.jpg" alt="Alexis total points: 1; An total points: 11; Brady total points: 36;"></a></p>`
+    const result = await parseResultsHtml(published)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.episodes).toEqual([
+      {
+        episodeNumber: 2,
+        imageUrl: 'https://assets.globaltv.com/wp-content/uploads/2026/10/survivor-51-episode-2-points_v2.jpg',
+        altText: 'Alexis total points: 1; An total points: 11; Brady total points: 36;',
+        scores: [
+          { sourceName: 'Alexis', points: 1 },
+          { sourceName: 'An', points: 11 },
+          { sourceName: 'Brady', points: 36 },
+        ],
+      },
+    ])
+  })
+
   it('ignores script and event-handler markup outside result image alt text', async () => {
     const malicious = `<article>
       <script>window.alert('xss')</script>

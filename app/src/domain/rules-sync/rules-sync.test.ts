@@ -38,6 +38,32 @@ const unknownRules = `<article>
 
 const malformed = `<div><p>This page has no usable fantasy rules.</p></div>`
 
+const season51Fragment = `<div align="center">
+  <p><strong>RETURNING PLAYERS:</strong> Jump to the <a href="#results">results</a> section below to see how many points your picks racked up for the week.</p>
+</div>
+<h2 id="howtoplay"><strong>How to Play</strong></h2>
+<p><strong>STEP 1:</strong> Pick <span><strong>FOUR</strong></span> castaways from each tribe that you think will make it to the end of the game. Here's a breakdown of the two tribes (Toka and Savu):</p>
+<p><strong>STEP 4:</strong> Points begin to accumulate starting with episode 2 airing on Wednesday, September 30.</p>
+<h2 id="scoring"><strong>Survivor Fantasy Tribe Scoring System</strong></h2>
+<ul>
+  <li>Score <strong>1</strong> <strong>point</strong> per castaway for each week they survive prior to the merge</li>
+  <li>Score <strong>3 points</strong> per castaway for each week they survive post-merge</li>
+  <li>Score <strong>10 bonus points</strong> if any of your picks comes in 3rd place</li>
+  <li>Score <strong>20 bonus points</strong> if any of your picks comes in 2nd place</li>
+  <li>Score <strong>30 bonus points</strong> if any of your picks wins the game</li>
+  <li>Score <strong>30 bonus points</strong> if your MVP wins the game</li>
+</ul>
+<h5><strong>FIVE POINT CATEGORIES</strong></h5>
+<ul>
+  <li>Wins a group Immunity Challenge</li>
+  <li>Visually cries with tears on camera</li>
+</ul>
+<p>Earn additional weekly bonus points if any of your Fantasy Tribe castaways do any of the following visibly on screen: (Limited to one line per castaway per week. For example, if your castaway cries multiple times in an episode, that's still 5 points for that week but if two of your castaways cry, that's 10 points!)</p>
+<h2 id="results"><strong>Results</strong></h2>
+<p>Remember, points begin to accumulate <strong>starting with episode 2</strong>.</p>
+<p><strong>EPISODE 2 POINTS:</strong></p>
+<p><a href="https://assets.globaltv.com/wp-content/uploads/2026/10/survivor-51-episode-2-points_v2.jpg"><img alt="Alexis total points: 1; An total points: 11; Brady total points: 36;" src="https://assets.globaltv.com/wp-content/uploads/2026/10/survivor-51-episode-2-points_v2.jpg"></a></p>`
+
 describe('parseRulesHtml', () => {
   it('parses the sanitized Season 50 structure', async () => {
     const result = await parseRulesHtml(sanitized)
@@ -84,6 +110,27 @@ describe('parseRulesHtml', () => {
     expect(result.ok).toBe(false)
     if (result.ok) return
     expect(result.code).toBe('empty_content')
+  })
+
+  it('parses the published Season 51 page, including sibling blocks after the first div', async () => {
+    const result = await parseRulesHtml(season51Fragment)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.proposed.rosterSize).toBe(8)
+    expect(result.proposed.picksPerOriginalTribe).toEqual({
+      per_tribe: 4,
+      tribe_count: 2,
+      manual_distribution: [4, 4],
+    })
+    expect(result.proposed.firstScoredEpisode).toBe(2)
+    expect(result.proposed.scoringRules.map((rule) => rule.code)).toEqual([
+      'survive_pre_merge',
+      'survive_post_merge',
+      'place_third',
+      'place_second',
+      'place_first',
+      'mvp_win',
+    ])
   })
 })
 
