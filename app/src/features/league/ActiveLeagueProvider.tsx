@@ -53,9 +53,7 @@ export function ActiveLeagueProvider({ children }: { children: ReactNode }) {
 
   useLeagueRealtime(activeLeague?.id, activeLeague?.season_id)
 
-  const leaguesLoading =
-    authLoading ||
-    (Boolean(user) && (leaguesQuery.isPending || leaguesQuery.isPaused))
+  const leaguesLoading = authLoading || (Boolean(user) && leaguesQuery.isLoading)
 
   const value = useMemo(
     () => ({

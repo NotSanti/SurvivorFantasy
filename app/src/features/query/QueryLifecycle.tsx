@@ -1,37 +1,36 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { useAuth } from '@/features/auth/use-auth'
 
 /**
- * PWA cold-start / resume often misses window-focus refetch, and iOS can pause
- * in-flight requests. Keep authenticated league data fresh when the session or
- * visibility changes.
+ * iOS PWAs often skip window-focus refetch after backgrounding. Debounce resume
+ * refreshes, and skip the first few seconds so cold-start score fetches can finish.
  */
 export function QueryLifecycle() {
   const queryClient = useQueryClient()
-  const { session } = useAuth()
-  const accessToken = session?.access_token
 
   useEffect(() => {
-    if (!accessToken) return
-    void queryClient.invalidateQueries()
-  }, [accessToken, queryClient])
+    const coldStartUntil = Date.now() + 3000
+    let timer: ReturnType<typeof setTimeout> | undefined
 
-  useEffect(() => {
-    const refreshActive = () => {
+    const scheduleRefresh = () => {
       if (document.visibilityState !== 'visible') return
-      void queryClient.refetchQueries({ type: 'active' })
+      if (Date.now() < coldStartUntil) return
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        void queryClient.refetchQueries({ type: 'active', stale: true })
+      }, 750)
     }
+
     const onPageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) refreshActive()
+      if (event.persisted) scheduleRefresh()
     }
-    document.addEventListener('visibilitychange', refreshActive)
+
+    document.addEventListener('visibilitychange', scheduleRefresh)
     window.addEventListener('pageshow', onPageShow)
-    window.addEventListener('online', refreshActive)
     return () => {
-      document.removeEventListener('visibilitychange', refreshActive)
+      clearTimeout(timer)
+      document.removeEventListener('visibilitychange', scheduleRefresh)
       window.removeEventListener('pageshow', onPageShow)
-      window.removeEventListener('online', refreshActive)
     }
   }, [queryClient])
 

@@ -8,9 +8,9 @@ import { useAuth } from '@/features/auth/use-auth'
 import { ensureAuthSession } from '@/lib/ensure-auth-session'
 import { getSupabaseClient } from '@/lib/supabase'
 
-/** True until the first settled result (or while the fetch is paused offline). */
-function awaitingInitial(query: Pick<UseQueryResult, 'isPending' | 'isPaused'>) {
-  return query.isPending || query.isPaused
+/** First fetch in flight. Avoid isPending alone — invalidation gaps look "pending" forever. */
+function awaitingInitial(query: Pick<UseQueryResult, 'isLoading'>) {
+  return query.isLoading
 }
 
 export function useLeagueWeek(league: ActiveLeague | null) {
@@ -268,12 +268,11 @@ export function useLeagueWeek(league: ActiveLeague | null) {
       (row) => row.episode_number === latestEpisode && (row.revision ?? 1) > 1,
     )
 
-  // Do not treat paused/not-yet-started queries as "loaded empty" — that flashes
-  // "Waiting on scores" in installed PWAs when navigator.onLine flaps.
+  // isLoading (pending+fetching) only — networkMode:'always' avoids the old
+  // paused-empty "Waiting on scores" flash without locking on invalidation gaps.
   const loading =
-    Boolean(league) &&
-    (!canQuery ||
-      awaitingInitial(membersQuery) ||
+    Boolean(league && canQuery) &&
+    (awaitingInitial(membersQuery) ||
       awaitingInitial(episodeScoresQuery) ||
       awaitingInitial(lineScoresQuery) ||
       awaitingInitial(episodesQuery) ||
@@ -284,9 +283,8 @@ export function useLeagueWeek(league: ActiveLeague | null) {
       (hasRuleSet && awaitingInitial(ruleSetQuery)))
   /** Tribe page only needs roster + castaway identity, not standings/scores. */
   const tribeLoading =
-    Boolean(league) &&
-    (!canQuery ||
-      awaitingInitial(rosterQuery) ||
+    Boolean(league && canQuery) &&
+    (awaitingInitial(rosterQuery) ||
       awaitingInitial(castawaysQuery) ||
       awaitingInitial(mvpQuery) ||
       awaitingInitial(lineScoresQuery))
