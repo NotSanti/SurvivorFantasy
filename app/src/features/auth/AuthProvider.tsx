@@ -16,17 +16,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!configured) return
 
     const supabase = getSupabaseClient()
+    // Prefer INITIAL_SESSION from onAuthStateChange so React Query does not run
+    // RLS reads before the client has finished restoring the persisted JWT (PWA).
     let cancelled = false
-
-    void supabase.auth.getSession().then(({ data, error: sessionError }) => {
+    const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (cancelled) return
-      if (sessionError) setError(sessionError.message)
-      setSession(data.session)
-      setLoading(false)
+      setSession(nextSession)
+      if (event === 'INITIAL_SESSION') {
+        setLoading(false)
+      }
+      if (event === 'SIGNED_OUT') {
+        setError(null)
+      }
     })
 
-    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession)
+    // Fallback if INITIAL_SESSION is delayed in some WebViews.
+    void supabase.auth.getSession().then(({ data: sessionData, error: sessionError }) => {
+      if (cancelled) return
+      if (sessionError) setError(sessionError.message)
+      setSession((current) => current ?? sessionData.session)
+      setLoading(false)
     })
 
     return () => {

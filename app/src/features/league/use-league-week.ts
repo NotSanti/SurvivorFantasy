@@ -1,21 +1,30 @@
 import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { buildStandings, lastUpdatedLabel } from '@/domain/standings/build-standings'
 import { leagueNextAction } from '@/domain/standings/next-action'
 import type { LeagueMember, MemberEpisodePoints } from '@/domain/standings/types'
 import type { ActiveLeague } from '@/features/league/active-league-context'
 import { useAuth } from '@/features/auth/use-auth'
+import { ensureAuthSession } from '@/lib/ensure-auth-session'
 import { getSupabaseClient } from '@/lib/supabase'
+
+/** True until the first settled result (or while the fetch is paused offline). */
+function awaitingInitial(query: Pick<UseQueryResult, 'isPending' | 'isPaused'>) {
+  return query.isPending || query.isPaused
+}
 
 export function useLeagueWeek(league: ActiveLeague | null) {
   const { user } = useAuth()
   const leagueId = league?.id
   const seasonId = league?.season_id
+  const canQuery = Boolean(user && leagueId)
+  const canQuerySeason = Boolean(user && seasonId)
 
   const membersQuery = useQuery({
     queryKey: ['league-members', leagueId],
-    enabled: Boolean(leagueId),
+    enabled: canQuery,
     queryFn: async () => {
+      await ensureAuthSession()
       const supabase = getSupabaseClient()
       const { data: members, error } = await supabase
         .from('league_members')
@@ -45,8 +54,9 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const episodeScoresQuery = useQuery({
     queryKey: ['member-episode-scores', leagueId],
-    enabled: Boolean(leagueId),
+    enabled: canQuery,
     queryFn: async () => {
+      await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('member_episode_scores')
         .select('league_id, member_id, episode_id, episode_number, points')
@@ -58,8 +68,9 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const lineScoresQuery = useQuery({
     queryKey: ['member-episode-castaway-scores', leagueId],
-    enabled: Boolean(leagueId),
+    enabled: canQuery,
     queryFn: async () => {
+      await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('member_episode_castaway_scores')
         .select(
@@ -73,8 +84,9 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const episodesQuery = useQuery({
     queryKey: ['episodes', seasonId],
-    enabled: Boolean(seasonId),
+    enabled: canQuerySeason,
     queryFn: async () => {
+      await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('episodes')
         .select('id, episode_number, status, published_score_revision, phase')
@@ -87,8 +99,10 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const publishedQuery = useQuery({
     queryKey: ['published-scores', seasonId],
-    enabled: Boolean(seasonId),
+    enabled: canQuerySeason,
+    staleTime: 0,
     queryFn: async () => {
+      await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('published_castaway_episode_scores')
         .select('episode_number, published_at, revision, points_total, castaway_id')
@@ -100,8 +114,9 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const rosterQuery = useQuery({
     queryKey: ['roster', leagueId],
-    enabled: Boolean(leagueId),
+    enabled: canQuery,
     queryFn: async () => {
+      await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('roster_entries')
         .select(
@@ -131,8 +146,9 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const mvpQuery = useQuery({
     queryKey: ['mvp', leagueId],
-    enabled: Boolean(leagueId),
+    enabled: canQuery,
     queryFn: async () => {
+      await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('mvp_selections')
         .select('member_id, castaway_id')
@@ -144,8 +160,9 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const castawaysQuery = useQuery({
     queryKey: ['castaways', seasonId],
-    enabled: Boolean(seasonId),
+    enabled: canQuerySeason,
     queryFn: async () => {
+      await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('castaways')
         .select('id, display_name, status, final_placement, eliminated_episode_number, photo_url, original_tribe_id')
@@ -156,10 +173,12 @@ export function useLeagueWeek(league: ActiveLeague | null) {
     },
   })
 
+  const hasRuleSet = Boolean(league?.ruleset_version_id)
   const ruleSetQuery = useQuery({
     queryKey: ['rule-set-for-league', leagueId],
-    enabled: Boolean(league?.ruleset_version_id),
+    enabled: canQuery && hasRuleSet,
     queryFn: async () => {
+      await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('rule_sets')
         .select(
@@ -249,19 +268,28 @@ export function useLeagueWeek(league: ActiveLeague | null) {
       (row) => row.episode_number === latestEpisode && (row.revision ?? 1) > 1,
     )
 
+  // Do not treat paused/not-yet-started queries as "loaded empty" — that flashes
+  // "Waiting on scores" in installed PWAs when navigator.onLine flaps.
   const loading =
-    membersQuery.isLoading ||
-    episodeScoresQuery.isLoading ||
-    lineScoresQuery.isLoading ||
-    episodesQuery.isLoading ||
-    publishedQuery.isLoading ||
-    rosterQuery.isLoading ||
-    mvpQuery.isLoading ||
-    castawaysQuery.isLoading ||
-    ruleSetQuery.isLoading
+    Boolean(league) &&
+    (!canQuery ||
+      awaitingInitial(membersQuery) ||
+      awaitingInitial(episodeScoresQuery) ||
+      awaitingInitial(lineScoresQuery) ||
+      awaitingInitial(episodesQuery) ||
+      awaitingInitial(publishedQuery) ||
+      awaitingInitial(rosterQuery) ||
+      awaitingInitial(mvpQuery) ||
+      awaitingInitial(castawaysQuery) ||
+      (hasRuleSet && awaitingInitial(ruleSetQuery)))
   /** Tribe page only needs roster + castaway identity, not standings/scores. */
   const tribeLoading =
-    rosterQuery.isLoading || castawaysQuery.isLoading || mvpQuery.isLoading || lineScoresQuery.isLoading
+    Boolean(league) &&
+    (!canQuery ||
+      awaitingInitial(rosterQuery) ||
+      awaitingInitial(castawaysQuery) ||
+      awaitingInitial(mvpQuery) ||
+      awaitingInitial(lineScoresQuery))
   const fetching =
     membersQuery.isFetching ||
     episodeScoresQuery.isFetching ||

@@ -5,6 +5,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { Toaster } from '@/components/ui/sonner'
 import { showPwaUpdateToast } from '@/components/layout/PwaUpdateToast'
 import { AuthProvider } from '@/features/auth/AuthProvider'
+import { QueryLifecycle } from '@/features/query/QueryLifecycle'
 import { createQueryClient } from '@/lib/query-client'
 import { registerPwa } from '@/lib/pwa'
 
@@ -25,6 +26,7 @@ export function AppProviders({ children }: AppProvidersProps) {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <QueryLifecycle />
           <TooltipProvider>
             {children}
             <Toaster />

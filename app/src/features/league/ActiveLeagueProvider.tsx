@@ -8,10 +8,11 @@ import {
 } from '@/features/league/active-league-storage'
 import { useAuth } from '@/features/auth/use-auth'
 import { useLeagueRealtime } from '@/hooks/use-league-realtime'
+import { ensureAuthSession } from '@/lib/ensure-auth-session'
 import { getSupabaseClient } from '@/lib/supabase'
 
 export function ActiveLeagueProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [storedId, setStoredId] = useState<string | null>(() => readActiveLeagueId())
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export function ActiveLeagueProvider({ children }: { children: ReactNode }) {
     queryKey: ['leagues', user?.id],
     enabled: Boolean(user),
     queryFn: async () => {
+      await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('leagues')
         .select('id, name, status, season_id, ruleset_version_id, commissioner_id')
@@ -51,15 +53,19 @@ export function ActiveLeagueProvider({ children }: { children: ReactNode }) {
 
   useLeagueRealtime(activeLeague?.id, activeLeague?.season_id)
 
+  const leaguesLoading =
+    authLoading ||
+    (Boolean(user) && (leaguesQuery.isPending || leaguesQuery.isPaused))
+
   const value = useMemo(
     () => ({
       leagues,
       activeLeague,
-      loading: leaguesQuery.isLoading,
+      loading: leaguesLoading,
       error: leaguesQuery.error instanceof Error ? leaguesQuery.error : null,
       setActiveLeagueId: writeActiveLeagueId,
     }),
-    [activeLeague, leagues, leaguesQuery.error, leaguesQuery.isLoading],
+    [activeLeague, leagues, leaguesLoading, leaguesQuery.error],
   )
 
   return <ActiveLeagueContext.Provider value={value}>{children}</ActiveLeagueContext.Provider>
