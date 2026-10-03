@@ -51,7 +51,10 @@ export function sameVapidApplicationServerKey(
   publicKey: string,
 ) {
   const current = subscription.options?.applicationServerKey
-  if (!current) return false
+  // iOS Safari / installed PWAs often omit applicationServerKey. Treat unknown as a
+  // match so we do not unsubscribe/resubscribe on every Activity visit (which breaks
+  // Apple Push endpoints mid-flight).
+  if (!current) return true
   const bytes =
     current instanceof ArrayBuffer
       ? new Uint8Array(current)

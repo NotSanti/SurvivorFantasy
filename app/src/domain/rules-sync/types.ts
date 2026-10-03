@@ -1,4 +1,4 @@
-export const PARSER_VERSION = 'rules-v1'
+export const PARSER_VERSION = 'rules-v2'
 export const SEASON_51_SLUG = 'survivor-51-fantasy-tribe'
 export const WP_POSTS_URL = 'https://www.globaltv.com/wp-json/wp/v2/posts'
 export const CANONICAL_PAGE_URL = 'https://www.globaltv.com/survivor-51-fantasy-tribe/'

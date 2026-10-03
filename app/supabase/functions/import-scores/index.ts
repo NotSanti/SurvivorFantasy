@@ -259,7 +259,9 @@ async function importEpisodes(
       p_source_image_url: decision.imageUrl,
       p_source_alt_text_hash: decision.altHash,
     })
-    if (error) throw error
+    if (error) {
+      throw new Error(error.message || error.code || 'publish_episode_scores failed')
+    }
     const published = data as { status?: string; kind?: string; episode_id?: string }
     if (published?.status === 'noop') {
       noopCount += 1

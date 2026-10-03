@@ -1,3 +1,4 @@
+import { Link, Navigate, useParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
@@ -20,6 +21,7 @@ type RosterCastaway = {
 }
 
 export function TribePage() {
+  const { memberId: memberIdParam } = useParams<{ memberId?: string }>()
   const { user } = useAuth()
   const { activeLeague, loading: leagueLoading } = useActiveLeague()
   const week = useLeagueWeek(activeLeague)
@@ -37,10 +39,17 @@ export function TribePage() {
     },
   })
 
-  if (leagueLoading || (activeLeague && week.tribeLoading) || tribesQuery.isLoading) {
+  const viewingOther = Boolean(memberIdParam)
+
+  if (
+    leagueLoading ||
+    (activeLeague && week.tribeLoading) ||
+    (activeLeague && viewingOther && week.loading) ||
+    tribesQuery.isLoading
+  ) {
     return (
       <PageContainer>
-        <LoadingState variant="spinner" label="Loading your tribe" />
+        <LoadingState variant="spinner" label="Loading tribe" />
       </PageContainer>
     )
   }
@@ -55,21 +64,40 @@ export function TribePage() {
   if (!user) {
     return (
       <PageContainer>
-        <LoadingState variant="spinner" label="Loading your tribe" />
+        <LoadingState variant="spinner" label="Loading tribe" />
       </PageContainer>
     )
   }
 
-  const myRoster = (week.roster ?? []).filter((row) => row.member_id === user.id)
-  const current = myRoster.filter((row) => row.ends_episode == null)
-  const history = myRoster.filter((row) => row.ends_episode != null)
-  const myMvp = (week.mvps ?? []).find((row) => row.member_id === user.id)?.castaway_id
-  const castawayOf = (entry: (typeof myRoster)[number]): RosterCastaway | undefined => {
+  const memberId = memberIdParam || user.id
+  const isSelf = memberId === user.id
+
+  if (memberIdParam && isSelf) {
+    return <Navigate to="/tribe" replace />
+  }
+
+  const memberInLeague =
+    isSelf ||
+    week.members.some((row) => row.user_id === memberId) ||
+    week.roster.some((row) => row.member_id === memberId)
+  const ownerName = isSelf
+    ? null
+    : (week.members.find((row) => row.user_id === memberId)?.profileName ?? null)
+
+  const memberRoster = (week.roster ?? []).filter((row) => row.member_id === memberId)
+  const current = memberRoster.filter((row) => row.ends_episode == null)
+  const history = memberRoster.filter((row) => row.ends_episode != null)
+  const memberMvp = (week.mvps ?? []).find((row) => row.member_id === memberId)?.castaway_id
+  const castawayOf = (entry: (typeof memberRoster)[number]): RosterCastaway | undefined => {
+    // Prefer season castaways list — roster embeds can lag after boots are marked.
+    const fromSeason = week.castaways.find((castaway) => castaway.id === entry.castaway_id)
+    if (fromSeason) return fromSeason
     const embedded = entry.castaway as RosterCastaway | RosterCastaway[] | null | undefined
     if (Array.isArray(embedded)) return embedded[0]
-    if (embedded) return embedded
-    return week.castaways.find((castaway) => castaway.id === entry.castaway_id)
+    return embedded ?? undefined
   }
+  const isEliminated = (castaway: RosterCastaway | undefined) =>
+    castaway?.status === 'eliminated' || castaway?.status === 'withdrawn'
   const tribeOf = (castaway: RosterCastaway | undefined) => {
     if (!castaway?.original_tribe_id) return null
     const tribe = tribesQuery.data?.find((row) => row.id === castaway.original_tribe_id)
@@ -81,13 +109,13 @@ export function TribePage() {
     (week.lineScores ?? [])
       .filter(
         (line) =>
-          line.member_id === user.id &&
+          line.member_id === memberId &&
           (line.roster_entry_id === rosterEntryId ||
             (line.is_mvp_bonus && line.castaway_id === castawayId)),
       )
       .reduce((sum, line) => sum + (line.points_total ?? 0), 0)
   const totalPoints = (week.lineScores ?? [])
-    .filter((line) => line.member_id === user.id)
+    .filter((line) => line.member_id === memberId)
     .reduce((sum, line) => sum + (line.points_total ?? 0), 0)
 
   const scoreTrailing = (points: number) => (
@@ -99,22 +127,52 @@ export function TribePage() {
     </span>
   )
 
+  if (!memberInLeague) {
+    return (
+      <PageContainer>
+        {!isSelf ? (
+          <Link to="/standings" className="text-sm text-muted-foreground underline">
+            Back to standings
+          </Link>
+        ) : null}
+        <EmptyState
+          title="Tribe not found"
+          description="That player is not in this league."
+        />
+      </PageContainer>
+    )
+  }
+
   return (
     <PageContainer>
+      {!isSelf ? (
+        <Link to="/standings" className="text-sm text-muted-foreground underline">
+          Back to standings
+        </Link>
+      ) : null}
       <div className="space-y-3">
         <FantasyTribeHeader
           leagueId={activeLeague.id}
-          userId={user.id}
+          userId={memberId}
           totalPoints={totalPoints}
+          editable={isSelf}
+          ownerName={ownerName}
         />
       </div>
       {week.error ? (
-        <ErrorState description="Could not load your roster." onRetry={week.refetch} />
+        <ErrorState
+          description={isSelf ? 'Could not load your roster.' : 'Could not load this tribe.'}
+          onRetry={week.refetch}
+        />
       ) : null}
       {current.length === 0 ? (
         <EmptyState
           title="Roster arrives after the draft"
-          description={`Your ${rosterSize}-person tribe, MVP, and episode points will live here.`}
+          description={
+            isSelf
+              ? `Your ${rosterSize}-person tribe, MVP, and episode points will live here.`
+              : `This ${rosterSize}-person tribe appears here after the draft.`
+          }
         />
       ) : (
         <section className="space-y-2">
@@ -123,8 +181,8 @@ export function TribePage() {
             {current.map((entry) => {
               const castaway = castawayOf(entry)
               const points = pointsForEntry(entry.id, entry.castaway_id)
-              const isMvp = myMvp === entry.castaway_id
-              const badge = castaway?.status === 'eliminated' ? 'Out' : null
+              const isMvp = memberMvp === entry.castaway_id
+              const eliminated = isEliminated(castaway)
               return (
                 <li key={entry.id}>
                   <CastawayPickCard
@@ -133,7 +191,8 @@ export function TribePage() {
                     photoUrl={castaway?.photo_url}
                     tribe={tribeOf(castaway)}
                     selected={isMvp}
-                    badge={badge}
+                    disabled={eliminated}
+                    badge={eliminated ? <span aria-label="Eliminated">💀</span> : null}
                     trailing={scoreTrailing(points)}
                     eager
                   />
@@ -145,11 +204,12 @@ export function TribePage() {
       )}
       {history.length > 0 ? (
         <section className="space-y-2">
-          <h2 className="font-medium">Earlier on the roster</h2>
+          <h2 className="font-medium">Eliminated</h2>
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {history.map((entry) => {
               const castaway = castawayOf(entry)
               const points = pointsForEntry(entry.id, entry.castaway_id)
+              const eliminated = isEliminated(castaway)
               return (
                 <li key={entry.id}>
                   <CastawayPickCard
@@ -157,7 +217,14 @@ export function TribePage() {
                     name={castaway?.display_name ?? 'Castaway'}
                     photoUrl={castaway?.photo_url}
                     tribe={tribeOf(castaway)}
-                    badge={`Ep ${entry.starts_episode}–${entry.ends_episode}`}
+                    disabled={eliminated}
+                    badge={
+                      eliminated ? (
+                        <span aria-label="Eliminated">💀</span>
+                      ) : (
+                        `Ep ${entry.starts_episode}–${entry.ends_episode}`
+                      )
+                    }
                     trailing={scoreTrailing(points)}
                     eager
                   />

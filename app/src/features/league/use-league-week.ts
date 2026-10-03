@@ -19,7 +19,7 @@ export function useLeagueWeek(league: ActiveLeague | null) {
       const supabase = getSupabaseClient()
       const { data: members, error } = await supabase
         .from('league_members')
-        .select('user_id, role, status')
+        .select('user_id, role, status, fantasy_tribe_name, fantasy_tribe_color')
         .eq('league_id', leagueId!)
         .eq('status', 'active')
       if (error) throw error
@@ -29,11 +29,17 @@ export function useLeagueWeek(league: ActiveLeague | null) {
         .select('id, display_name')
         .in('id', ids)
       if (profileError) throw profileError
-      return members.map((member) => ({
-        ...member,
-        displayName:
-          profiles.find((profile) => profile.id === member.user_id)?.display_name ?? 'League member',
-      }))
+      return members.map((member) => {
+        const profileName =
+          profiles.find((profile) => profile.id === member.user_id)?.display_name ?? 'League member'
+        const tribeName = member.fantasy_tribe_name?.trim()
+        return {
+          ...member,
+          displayName: tribeName || profileName,
+          profileName,
+          fantasyTribeColor: member.fantasy_tribe_color,
+        }
+      })
     },
   })
 
@@ -191,6 +197,7 @@ export function useLeagueWeek(league: ActiveLeague | null) {
         leagueId: leagueId ?? '',
         memberId: member.user_id,
         displayName: member.displayName,
+        fantasyTribeColor: member.fantasyTribeColor ?? null,
       })),
     [leagueId, membersQuery.data],
   )

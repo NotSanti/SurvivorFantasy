@@ -142,7 +142,8 @@ function parseQuotas(document: Document): Pick<
   const rosterSize = perTribe * tribeCount
   return {
     rosterSize,
-    wildcardSlots: 1,
+    // Season 51 has no draft wildcard. Global's post-merge extra pick is handled by merge flow, not this field.
+    wildcardSlots: 0,
     picksPerOriginalTribe: {
       per_tribe: perTribe,
       tribe_count: tribeCount,

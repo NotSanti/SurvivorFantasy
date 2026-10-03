@@ -37,18 +37,29 @@ registerRoute(
   }),
 )
 
-self.addEventListener('push', (event) => {
-  const payload = parsePushPayload(event.data?.text() ?? null)
-  if (!payload) return
+const NOTIFICATION_ICON = '/icons/icon-192.png'
+const NOTIFICATION_BADGE = '/icons/icon-192.png'
 
-  event.waitUntil(
-    self.registration.showNotification(payload.title, {
-      body: payload.body,
-      tag: payload.tag,
-      data: { url: payload.url },
-    }),
-  )
+self.addEventListener('push', (event) => {
+  event.waitUntil(showPushNotification(event))
 })
+
+async function showPushNotification(event: PushEvent) {
+  const payload = parsePushPayload(event.data?.text() ?? null) ?? {
+    title: 'SFL update',
+    body: 'Open SFL for the latest from your camp.',
+    url: '/activity',
+    tag: 'sfl-fallback',
+  }
+
+  await self.registration.showNotification(payload.title, {
+    body: payload.body,
+    tag: payload.tag,
+    icon: NOTIFICATION_ICON,
+    badge: NOTIFICATION_BADGE,
+    data: { url: payload.url },
+  })
+}
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
@@ -63,21 +74,50 @@ self.addEventListener('notificationclick', (event) => {
 })
 
 async function focusOrOpenWindow(url: string) {
+  const path = (() => {
+    try {
+      const parsed = new URL(url)
+      return `${parsed.pathname}${parsed.search}${parsed.hash}` || '/'
+    } catch {
+      return '/'
+    }
+  })()
+
   const windows = await self.clients.matchAll({
     type: 'window',
     includeUncontrolled: true,
   })
-  const existing = windows.find(
-    (client): client is WindowClient => 'focus' in client,
-  )
-  if (existing) {
-    if ('navigate' in existing) {
-      await existing.navigate(url)
+
+  for (const client of windows) {
+    if (!('focus' in client)) continue
+    const focused = await client.focus()
+    const target = focused ?? client
+
+    // Chromium can soft-navigate; iOS Safari PWAs do not implement navigate().
+    if ('navigate' in target && typeof target.navigate === 'function') {
+      try {
+        const navigated = await target.navigate(url)
+        if (navigated) return
+      } catch {
+        // Fall through to SPA postMessage.
+      }
     }
-    await existing.focus()
+
+    target.postMessage({ type: 'SFL_NOTIFICATION_NAVIGATE', url: path })
     return
   }
-  await self.clients.openWindow(url)
+
+  const opened = await self.clients.openWindow(url)
+  if (opened) return
+
+  // iOS sometimes returns null from openWindow when a window is already present.
+  const retry = await self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true,
+  })
+  for (const client of retry) {
+    client.postMessage({ type: 'SFL_NOTIFICATION_NAVIGATE', url: path })
+  }
 }
 
 export {}

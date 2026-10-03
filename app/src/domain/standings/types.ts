@@ -25,6 +25,7 @@ export type LeagueMember = {
   leagueId: string
   memberId: string
   displayName: string
+  fantasyTribeColor: string | null
 }
 
 export type MvpSelection = {
@@ -37,6 +38,7 @@ export type StandingRow = {
   leagueId: string
   memberId: string
   displayName: string
+  fantasyTribeColor: string | null
   totalPoints: number
   weeklyPoints: number
   rank: number

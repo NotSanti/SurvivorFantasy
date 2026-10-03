@@ -50,9 +50,30 @@ describe('ensurePushSubscription', () => {
     expect(subscribe).not.toHaveBeenCalled()
   })
 
+  it('keeps a subscription when the browser omits applicationServerKey (iOS PWA)', async () => {
+    const existing = {
+      endpoint: 'https://web.push.apple.com/abc',
+      unsubscribe: vi.fn().mockResolvedValue(true),
+    }
+    const subscribe = vi.fn()
+    const registration = {
+      pushManager: {
+        getSubscription: vi.fn().mockResolvedValue(existing),
+        subscribe,
+      },
+    }
+    await expect(ensurePushSubscription(registration, publicKey)).resolves.toBe(existing)
+    expect(existing.unsubscribe).not.toHaveBeenCalled()
+    expect(subscribe).not.toHaveBeenCalled()
+  })
+
   it('replaces a subscription created with a different VAPID key', async () => {
+    const otherKey = vapidApplicationServerKey(
+      bytesToUrlBase64(Uint8Array.from({ length: 65 }, (_, index) => (index === 0 ? 4 : 2))),
+    )
     const stale = {
       endpoint: 'https://fcm.googleapis.com/old',
+      options: { applicationServerKey: otherKey },
       unsubscribe: vi.fn().mockResolvedValue(true),
     }
     const next = { endpoint: 'https://fcm.googleapis.com/new' }

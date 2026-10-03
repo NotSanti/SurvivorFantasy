@@ -60,6 +60,7 @@ export function AppRouter() {
           <Route path="/league/episodes/:episodeNumber" element={<EpisodeDetailPage />} />
           <Route path="/league/merge" element={<MergeMovePage />} />
           <Route path="/tribe" element={<TribePage />} />
+          <Route path="/tribe/:memberId" element={<TribePage />} />
           <Route path="/standings" element={<StandingsPage />} />
           <Route path="/activity" element={<ActivityPage />} />
           <Route

@@ -21,9 +21,19 @@ type FantasyTribeHeaderProps = {
   leagueId: string
   userId: string
   totalPoints?: number
+  /** When false, tribe name/color are display-only (other members). */
+  editable?: boolean
+  /** Profile name shown in muted parentheses when viewing another member’s tribe. */
+  ownerName?: string | null
 }
 
-export function FantasyTribeHeader({ leagueId, userId, totalPoints }: FantasyTribeHeaderProps) {
+export function FantasyTribeHeader({
+  leagueId,
+  userId,
+  totalPoints,
+  editable = true,
+  ownerName = null,
+}: FantasyTribeHeaderProps) {
   const queryClient = useQueryClient()
   const membershipQuery = useQuery({
     queryKey: ['fantasy-tribe', leagueId, userId],
@@ -76,7 +86,7 @@ export function FantasyTribeHeader({ leagueId, userId, totalPoints }: FantasyTri
     )
   }
 
-  if (editing) {
+  if (editable && editing) {
     return (
       <form
         className="space-y-4"
@@ -156,25 +166,32 @@ export function FantasyTribeHeader({ leagueId, userId, totalPoints }: FantasyTri
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
-        <h1
-          className="truncate font-display text-2xl leading-tight font-semibold"
-          style={{ color: nameColor }}
-        >
-          {displayName}
-        </h1>
-        <button
-          type="button"
-          className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          aria-label="Edit tribe name and color"
-          onClick={() => {
-            setName(displayName)
-            setColorId(displayColor)
-            setEditing(true)
-            save.reset()
-          }}
-        >
-          <Pencil className="size-4" />
-        </button>
+        <div className="flex min-w-0 items-baseline gap-1.5">
+          <h1
+            className="truncate font-display text-2xl leading-tight font-semibold"
+            style={{ color: nameColor }}
+          >
+            {displayName}
+          </h1>
+          {ownerName ? (
+            <span className="shrink-0 text-sm text-muted-foreground">({ownerName})</span>
+          ) : null}
+        </div>
+        {editable ? (
+          <button
+            type="button"
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+            aria-label="Edit tribe name and color"
+            onClick={() => {
+              setName(displayName)
+              setColorId(displayColor)
+              setEditing(true)
+              save.reset()
+            }}
+          >
+            <Pencil className="size-4" />
+          </button>
+        ) : null}
       </div>
       {totalPoints != null ? (
         <span

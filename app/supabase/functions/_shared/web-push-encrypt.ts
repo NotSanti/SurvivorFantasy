@@ -1,5 +1,10 @@
 const encoder = new TextEncoder()
 
+/** Legacy product name still present in older outbox rows / DB copy. */
+export function brandPushCopy(text: string) {
+  return text.replaceAll(/Kindling/gi, 'SFL')
+}
+
 export function pushCopyFromOutbox(eventType: string, payload: Record<string, unknown>) {
   const route =
     typeof payload.route === 'string' && payload.route.startsWith('/') && !payload.route.startsWith('//')
@@ -41,7 +46,12 @@ export function pushCopyFromOutbox(eventType: string, payload: Record<string, un
     }
   }
   if (typeof payload.title === 'string' && typeof payload.body === 'string') {
-    return { title: payload.title, body: payload.body, url: route, tag: eventType }
+    return {
+      title: brandPushCopy(payload.title),
+      body: brandPushCopy(payload.body),
+      url: route,
+      tag: eventType,
+    }
   }
   return {
     title: 'SFL update',

@@ -52,6 +52,7 @@ export function buildStandings(input: {
         leagueId: row.leagueId,
         memberId: row.memberId,
         displayName: row.displayName,
+        fantasyTribeColor: row.fantasyTribeColor,
         totalPoints: row.totalPoints,
         weeklyPoints: row.weeklyPoints,
         rank: ranks[index],

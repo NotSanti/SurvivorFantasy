@@ -20,9 +20,9 @@ const river = 'river'
 const ness = 'ness'
 
 const members: LeagueMember[] = [
-  { leagueId: leagueA, memberId: cam, displayName: 'Camp Cam' },
-  { leagueId: leagueA, memberId: river, displayName: 'River' },
-  { leagueId: leagueA, memberId: ness, displayName: 'Ness' },
+  { leagueId: leagueA, memberId: cam, displayName: 'Camp Cam', fantasyTribeColor: 'ember' },
+  { leagueId: leagueA, memberId: river, displayName: 'River', fantasyTribeColor: 'lagoon' },
+  { leagueId: leagueA, memberId: ness, displayName: 'Ness', fantasyTribeColor: 'violet' },
 ]
 
 function entry(

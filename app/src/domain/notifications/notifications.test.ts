@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pushPayloadForOutbox } from './copy'
+import { brandPushCopy, pushPayloadForOutbox } from './copy'
 import { nextOutboxAvailableAt, redactOutboxError, shouldDeadLetter } from './outbox'
 import { parsePushPayload } from '@/domain/push-payload'
 
@@ -13,6 +13,23 @@ describe('lock-screen copy', () => {
     expect(payload.body.toLowerCase()).not.toContain('boot')
     expect(payload.url).toBe('/standings')
     expect(parsePushPayload(payload)).toMatchObject({ url: '/standings' })
+  })
+
+  it('rewrites legacy Kindling branding to SFL', () => {
+    expect(brandPushCopy('Open Kindling to see your tribe score.')).toBe(
+      'Open SFL to see your tribe score.',
+    )
+    const payload = pushPayloadForOutbox({
+      eventType: 'league_updates',
+      payload: {
+        title: 'Kindling update',
+        body: 'Open Kindling for the latest from your camp.',
+        route: '/activity',
+      },
+    })
+    expect(payload.title).toBe('SFL update')
+    expect(payload.body).toBe('Open SFL for the latest from your camp.')
+    expect(payload.body.toLowerCase()).not.toContain('kindling')
   })
 })
 

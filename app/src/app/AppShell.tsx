@@ -4,6 +4,7 @@ import { AppHeader } from '@/components/layout/AppHeader'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { OfflineState } from '@/components/states/OfflineState'
 import { ActiveLeagueProvider } from '@/features/league/ActiveLeagueProvider'
+import { PushNavigationListener } from '@/features/pwa/PushNavigationListener'
 import { useOnlineStatus } from '@/hooks/use-online-status'
 
 export function AppShell() {
@@ -26,6 +27,7 @@ export function AppShell() {
           transition={{ duration: reducedMotion ? 0 : 0.22 }}
         >
           <ActiveLeagueProvider>
+            <PushNavigationListener />
             <Outlet />
           </ActiveLeagueProvider>
         </motion.div>

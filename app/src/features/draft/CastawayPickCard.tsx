@@ -17,7 +17,8 @@ type CastawayPickCardProps = {
   static?: boolean
   /** Prefer immediate image fetch (above-the-fold tribe roster). */
   eager?: boolean
-  badge?: string | null
+  /** Pill label, or pass a React node (e.g. skull) for unstyled content. */
+  badge?: ReactNode
   trailing?: ReactNode
   onClick?: () => void
 }
@@ -41,7 +42,7 @@ export function CastawayPickCard({
   disabled = false,
   static: isStatic = false,
   eager = false,
-  badge = null,
+  badge,
   trailing = null,
   onClick,
 }: CastawayPickCardProps) {
@@ -52,7 +53,8 @@ export function CastawayPickCard({
     'border-border bg-card/60',
     !isStatic && 'hover:border-ember/60 hover:bg-card',
     selected && 'border-ember bg-ember/15 ring-1 ring-ember/40',
-    disabled && !isStatic && 'cursor-not-allowed opacity-55 hover:border-border hover:bg-card/60',
+    disabled && 'opacity-55',
+    disabled && !isStatic && 'cursor-not-allowed hover:border-border hover:bg-card/60',
   )
 
   const body = (
@@ -74,7 +76,12 @@ export function CastawayPickCard({
         )}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate font-display text-lg leading-tight font-semibold text-ember">
+        <span
+          className={cn(
+            'block truncate font-display text-lg leading-tight font-semibold',
+            disabled ? 'text-muted-foreground' : 'text-ember',
+          )}
+        >
           {name}
         </span>
         {tribeLabel ? (
@@ -89,7 +96,11 @@ export function CastawayPickCard({
         ) : null}
       </span>
       {trailing}
-      {badge ? <Badge className="shrink-0">{badge}</Badge> : null}
+      {badge == null || badge === false ? null : typeof badge === 'string' || typeof badge === 'number' ? (
+        <Badge className="shrink-0">{badge}</Badge>
+      ) : (
+        <span className="shrink-0 text-base leading-none">{badge}</span>
+      )}
     </>
   )
 

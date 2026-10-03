@@ -1,5 +1,10 @@
 import type { PushPayload } from '@/domain/push-payload'
 
+/** Legacy product name still present in older outbox rows / DB copy. */
+export function brandPushCopy(text: string) {
+  return text.replaceAll(/Kindling/gi, 'SFL')
+}
+
 export function lockScreenScoreCopy(
   episodeNumber: number,
   kind: 'published' | 'correction',
@@ -62,6 +67,14 @@ export function pushPayloadForOutbox(input: {
   }
   if (input.eventType === 'weekly_reminder') {
     return { ...lockScreenReminderCopy(), url: route, tag: input.eventType }
+  }
+  if (typeof input.payload.title === 'string' && typeof input.payload.body === 'string') {
+    return {
+      title: brandPushCopy(input.payload.title),
+      body: brandPushCopy(input.payload.body),
+      url: route,
+      tag: input.eventType,
+    }
   }
   return {
     title: 'SFL update',

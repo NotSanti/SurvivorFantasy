@@ -111,13 +111,14 @@ export function ActivityPage() {
   }, [])
 
   useEffect(() => {
-    if (permission !== 'granted' || !('serviceWorker' in navigator)) return
+    if (permission !== 'granted' || !vapidPublic || !('serviceWorker' in navigator)) return
     let cancelled = false
     void (async () => {
       try {
         const registration = await waitForPushRegistration()
-        const existing = await registration.pushManager.getSubscription()
-        if (!existing || cancelled) return
+        if (cancelled) return
+        // Always ensure + persist — iOS PWAs can drop the browser subscription while
+        // Notification.permission stays "granted".
         const subscription = await ensurePushSubscription(registration, vapidPublic)
         if (cancelled) return
         setPushOk(true)
