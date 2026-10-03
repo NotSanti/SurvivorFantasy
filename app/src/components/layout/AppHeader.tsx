@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import { ProductMark } from '@/components/brand/ProductMark'
-import { PRODUCT_NAME } from '@/domain/product'
+import { APP_VERSION, PRODUCT_NAME } from '@/domain/product'
 import { useIsAdmin } from '@/features/auth/use-is-admin'
 
 type AppHeaderProps = {
@@ -21,13 +21,19 @@ export function AppHeader({ title = PRODUCT_NAME }: AppHeaderProps) {
         >
           {isBrand ? <ProductMark /> : title}
         </Link>
-        {isAdmin && !loading ? (
-          <Link to="/admin" className="inline-flex min-h-11 items-center text-sm text-muted-foreground">
-            Admin
-          </Link>
-        ) : (
-          <span aria-hidden className="min-h-11" />
-        )}
+        <div className="flex min-h-11 items-center gap-3">
+          {isAdmin && !loading ? (
+            <Link to="/admin" className="inline-flex min-h-11 items-center text-sm text-muted-foreground">
+              Admin
+            </Link>
+          ) : null}
+          <span
+            className="text-xs text-muted-foreground opacity-50"
+            aria-label={`Version ${APP_VERSION}`}
+          >
+            v{APP_VERSION}
+          </span>
+        </div>
       </div>
     </header>
   )

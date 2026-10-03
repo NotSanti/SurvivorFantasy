@@ -1,11 +1,18 @@
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
+const appVersion = (
+  JSON.parse(readFileSync(path.resolve(rootDir, 'package.json'), 'utf8')) as { version: string }
+).version
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
   // Cast: Vitest 3 ships an older Vite type tree than Vite 8 / Rolldown.
   plugins: [react()] as never,
   resolve: {

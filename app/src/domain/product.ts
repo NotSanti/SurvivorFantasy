@@ -1,5 +1,7 @@
 export const PRODUCT_NAME = 'SFL'
 export const PRODUCT_SHORT_NAME = 'SFL'
+/** Injected from package.json at build time. */
+export const APP_VERSION = __APP_VERSION__
 
 export const NAV_ITEMS = [
   { to: '/league', label: 'League', id: 'league' },

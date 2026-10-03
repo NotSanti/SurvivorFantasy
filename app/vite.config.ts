@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
@@ -60,8 +61,14 @@ function securityHeadersPlugin(): Plugin {
 }
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
+const appVersion = (
+  JSON.parse(readFileSync(path.resolve(rootDir, 'package.json'), 'utf8')) as { version: string }
+).version
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
   plugins: [
     securityHeadersPlugin(),
     react(),
