@@ -82,17 +82,27 @@ export function TribePage() {
     week.roster.some((row) => row.member_id === memberId)
   const ownerName = isSelf
     ? null
-    : (week.members.find((row) => row.user_id === memberId)?.profileName ?? null)
+    : (week.members.find((row) => row.user_id === memberId)?.profileName ??
+      null)
 
-  const memberRoster = (week.roster ?? []).filter((row) => row.member_id === memberId)
+  const memberRoster = (week.roster ?? []).filter(
+    (row) => row.member_id === memberId,
+  )
   const current = memberRoster.filter((row) => row.ends_episode == null)
   const history = memberRoster.filter((row) => row.ends_episode != null)
-  const memberMvp = (week.mvps ?? []).find((row) => row.member_id === memberId)?.castaway_id
-  const castawayOf = (entry: (typeof memberRoster)[number]): RosterCastaway | undefined => {
+  const memberMvp = (week.mvps ?? []).find(
+    (row) => row.member_id === memberId,
+  )?.castaway_id
+  const castawayOf = (
+    entry: (typeof memberRoster)[number],
+  ): RosterCastaway | undefined => {
     // Prefer season castaways list — roster embeds can lag after boots are marked.
-    const fromSeason = week.castaways.find((castaway) => castaway.id === entry.castaway_id)
+    const fromSeason = week.castaways.find(
+      (castaway) => castaway.id === entry.castaway_id,
+    )
     if (fromSeason) return fromSeason
-    const embedded = entry.castaway as RosterCastaway | RosterCastaway[] | null | undefined
+    const embedded = entry.castaway as
+      RosterCastaway | RosterCastaway[] | null | undefined
     if (Array.isArray(embedded)) return embedded[0]
     return embedded ?? undefined
   }
@@ -100,7 +110,9 @@ export function TribePage() {
     castaway?.status === 'eliminated' || castaway?.status === 'withdrawn'
   const tribeOf = (castaway: RosterCastaway | undefined) => {
     if (!castaway?.original_tribe_id) return null
-    const tribe = tribesQuery.data?.find((row) => row.id === castaway.original_tribe_id)
+    const tribe = tribesQuery.data?.find(
+      (row) => row.id === castaway.original_tribe_id,
+    )
     if (!tribe) return null
     return { name: tribe.name, colorName: tribe.color_name }
   }
@@ -120,10 +132,12 @@ export function TribePage() {
 
   const scoreTrailing = (points: number) => (
     <span className="flex shrink-0 items-baseline gap-1 tabular-nums">
-      <span className="font-display text-lg leading-none font-semibold text-foreground">
+      <span className="font-display text-foreground text-lg leading-none font-semibold">
         {points}
       </span>
-      <span className="text-[0.65rem] tracking-wide text-muted-foreground uppercase">pts</span>
+      <span className="text-muted-foreground text-[0.65rem] tracking-wide uppercase">
+        pts
+      </span>
     </span>
   )
 
@@ -131,7 +145,10 @@ export function TribePage() {
     return (
       <PageContainer>
         {!isSelf ? (
-          <Link to="/standings" className="text-sm text-muted-foreground underline">
+          <Link
+            to="/standings"
+            className="text-muted-foreground text-sm underline"
+          >
             Back to standings
           </Link>
         ) : null}
@@ -146,7 +163,10 @@ export function TribePage() {
   return (
     <PageContainer>
       {!isSelf ? (
-        <Link to="/standings" className="text-sm text-muted-foreground underline">
+        <Link
+          to="/standings"
+          className="text-muted-foreground text-sm underline"
+        >
           Back to standings
         </Link>
       ) : null}
@@ -157,11 +177,20 @@ export function TribePage() {
           totalPoints={totalPoints}
           editable={isSelf}
           ownerName={ownerName}
+          castaways={week.castaways.map((castaway) => ({
+            id: castaway.id,
+            displayName: castaway.display_name,
+            photoUrl: castaway.photo_url,
+          }))}
         />
       </div>
       {week.error ? (
         <ErrorState
-          description={isSelf ? 'Could not load your roster.' : 'Could not load this tribe.'}
+          description={
+            isSelf
+              ? 'Could not load your roster.'
+              : 'Could not load this tribe.'
+          }
           onRetry={week.refetch}
         />
       ) : null}
@@ -192,7 +221,11 @@ export function TribePage() {
                     tribe={tribeOf(castaway)}
                     selected={isMvp}
                     disabled={eliminated}
-                    badge={eliminated ? <span aria-label="Eliminated">💀</span> : null}
+                    badge={
+                      eliminated ? (
+                        <span aria-label="Eliminated">💀</span>
+                      ) : null
+                    }
                     trailing={scoreTrailing(points)}
                     eager
                   />

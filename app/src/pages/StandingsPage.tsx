@@ -10,6 +10,7 @@ import {
 import { NoActiveLeague } from '@/features/league/NoActiveLeague'
 import { useActiveLeague } from '@/features/league/use-active-league'
 import { useLeagueWeek } from '@/features/league/use-league-week'
+import { TribeAvatar } from '@/features/league/TribeAvatar'
 import { RankDelta } from '@/features/standings/RankDelta'
 import { useAuth } from '@/features/auth/use-auth'
 
@@ -38,17 +39,22 @@ export function StandingsPage() {
     <PageContainer>
       <div className="space-y-1">
         <h1 className="font-display text-2xl font-semibold">Standings</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Tied totals share a rank. Tribe names only sort the list.
           {week.lastUpdatedLabel ? ` Updated ${week.lastUpdatedLabel}.` : ''}
           {week.fetching ? ' Updating…' : ''}
         </p>
       </div>
       {week.error ? (
-        <ErrorState description="Could not load standings." onRetry={week.refetch} />
+        <ErrorState
+          description="Could not load standings."
+          onRetry={week.refetch}
+        />
       ) : null}
       {week.latestCorrected ? (
-        <p className="rounded-xl bg-muted px-3 py-2 text-sm">Latest published totals include a correction.</p>
+        <p className="bg-muted rounded-xl px-3 py-2 text-sm">
+          Latest published totals include a correction.
+        </p>
       ) : null}
       {!week.hasPublishedScores ? (
         <EmptyState
@@ -61,25 +67,34 @@ export function StandingsPage() {
             const tribeColor = fantasyTribeColorSwatch(
               resolveFantasyTribeColorId(row.fantasyTribeColor),
             )
-            const tribeTo = row.memberId === user?.id ? '/tribe' : `/tribe/${row.memberId}`
+            const member = week.members.find(
+              (item) => item.user_id === row.memberId,
+            )
+            const tribeTo =
+              row.memberId === user?.id ? '/tribe' : `/tribe/${row.memberId}`
             return (
               <li key={row.memberId}>
                 <Link
                   to={tribeTo}
-                  className="flex min-h-11 items-center justify-between gap-3 rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10 transition-colors hover:bg-muted/40"
+                  className="bg-card ring-foreground/10 hover:bg-muted/40 flex min-h-11 items-center justify-between gap-3 rounded-xl px-4 py-3 ring-1 transition-colors"
                 >
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span
-                      className="mt-1.5 size-2.5 shrink-0 rounded-full ring-1 ring-foreground/15"
-                      style={{ backgroundColor: tribeColor }}
-                      aria-hidden
+                  <div className="flex min-w-0 items-center gap-3">
+                    <TribeAvatar
+                      displayName={member?.profileName ?? row.displayName}
+                      castawayPhotoUrl={member?.avatarPhotoUrl}
+                      avatarPath={member?.avatarPath}
+                      avatarUpdatedAt={member?.avatarUpdatedAt}
+                      ringColor={tribeColor}
                     />
                     <div className="min-w-0 space-y-0.5">
-                      <p className="truncate font-medium uppercase" style={{ color: tribeColor }}>
+                      <p
+                        className="truncate font-medium uppercase"
+                        style={{ color: tribeColor }}
+                      >
                         {row.rank}. {row.displayName}
                         {row.memberId === user?.id ? ' (you)' : ''}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {week.latestEpisode
                           ? `+${row.weeklyPoints} pts ep ${week.latestEpisode}`
                           : 'No episode yet'}
@@ -100,7 +115,10 @@ export function StandingsPage() {
         </ol>
       )}
       {week.latestEpisode ? (
-        <Link to={`/league/episodes/${week.latestEpisode}`} className="text-sm underline">
+        <Link
+          to={`/league/episodes/${week.latestEpisode}`}
+          className="text-sm underline"
+        >
           Episode {week.latestEpisode} details
         </Link>
       ) : null}

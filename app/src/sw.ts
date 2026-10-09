@@ -11,6 +11,9 @@ declare const self: ServiceWorkerGlobalScope & {
 
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
+// Activate immediately so a crashed page can still replace a worker that
+// cached a broken dev bundle.
+void self.skipWaiting()
 clientsClaim()
 
 self.addEventListener('message', (event) => {
@@ -35,9 +38,14 @@ try {
   )
 }
 
+// Vite's dev modules change in place. Caching them serves a stale React
+// next to a fresh one and crashes the app (invalid hook call).
 registerRoute(
   ({ request, url }) =>
     url.origin === self.location.origin &&
+    !url.pathname.startsWith('/node_modules/') &&
+    !url.pathname.startsWith('/src/') &&
+    !url.pathname.startsWith('/@') &&
     ['style', 'script', 'image', 'font'].includes(request.destination),
   new StaleWhileRevalidate({
     cacheName: 'sfl-static',

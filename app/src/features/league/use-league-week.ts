@@ -1,11 +1,18 @@
 import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
-import { buildStandings, lastUpdatedLabel } from '@/domain/standings/build-standings'
+import {
+  buildStandings,
+  lastUpdatedLabel,
+} from '@/domain/standings/build-standings'
 import { leagueNextAction } from '@/domain/standings/next-action'
-import type { LeagueMember, MemberEpisodePoints } from '@/domain/standings/types'
+import type {
+  LeagueMember,
+  MemberEpisodePoints,
+} from '@/domain/standings/types'
 import type { ActiveLeague } from '@/features/league/active-league-context'
 import { useAuth } from '@/features/auth/use-auth'
 import { ensureAuthSession } from '@/lib/ensure-auth-session'
+import { firstRelated } from '@/domain/fantasy-tribe/avatar'
 import { getSupabaseClient } from '@/lib/supabase'
 
 /** First fetch in flight. Avoid isPending alone — invalidation gaps look "pending" forever. */
@@ -34,7 +41,10 @@ export function leagueWeekIncludes(view: LeagueWeekView, part: LeagueWeekPart) {
   return (LEAGUE_WEEK_VIEWS[view] as readonly LeagueWeekPart[]).includes(part)
 }
 
-export function useLeagueWeek(league: ActiveLeague | null, view: LeagueWeekView) {
+export function useLeagueWeek(
+  league: ActiveLeague | null,
+  view: LeagueWeekView,
+) {
   const { user } = useAuth()
   const leagueId = league?.id
   const seasonId = league?.season_id
@@ -50,7 +60,18 @@ export function useLeagueWeek(league: ActiveLeague | null, view: LeagueWeekView)
       const supabase = getSupabaseClient()
       const { data: members, error } = await supabase
         .from('league_members')
-        .select('user_id, role, status, fantasy_tribe_name, fantasy_tribe_color')
+        .select(
+          `
+          user_id,
+          role,
+          status,
+          fantasy_tribe_name,
+          fantasy_tribe_color,
+          avatar_path,
+          avatar_updated_at,
+          avatar_castaway:castaways ( photo_url )
+        `,
+        )
         .eq('league_id', leagueId!)
         .eq('status', 'active')
         .abortSignal(signal)
@@ -64,13 +85,18 @@ export function useLeagueWeek(league: ActiveLeague | null, view: LeagueWeekView)
       if (profileError) throw profileError
       return members.map((member) => {
         const profileName =
-          profiles.find((profile) => profile.id === member.user_id)?.display_name ?? 'League member'
+          profiles.find((profile) => profile.id === member.user_id)
+            ?.display_name ?? 'League member'
         const tribeName = member.fantasy_tribe_name?.trim()
         return {
           ...member,
           displayName: tribeName || profileName,
           profileName,
           fantasyTribeColor: member.fantasy_tribe_color,
+          avatarPhotoUrl:
+            firstRelated(member.avatar_castaway)?.photo_url ?? null,
+          avatarPath: member.avatar_path,
+          avatarUpdatedAt: member.avatar_updated_at,
         }
       })
     },
@@ -132,7 +158,9 @@ export function useLeagueWeek(league: ActiveLeague | null, view: LeagueWeekView)
       await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('published_castaway_episode_scores')
-        .select('episode_number, published_at, revision, points_total, castaway_id')
+        .select(
+          'episode_number, published_at, revision, points_total, castaway_id',
+        )
         .eq('season_id', seasonId!)
         .abortSignal(signal)
       if (error) throw error
@@ -195,7 +223,9 @@ export function useLeagueWeek(league: ActiveLeague | null, view: LeagueWeekView)
       await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('castaways')
-        .select('id, display_name, status, final_placement, eliminated_episode_number, photo_url, original_tribe_id')
+        .select(
+          'id, display_name, status, final_placement, eliminated_episode_number, photo_url, original_tribe_id',
+        )
         .eq('season_id', seasonId!)
         .order('display_name')
         .abortSignal(signal)
@@ -225,13 +255,18 @@ export function useLeagueWeek(league: ActiveLeague | null, view: LeagueWeekView)
 
   const publishedNumbers = useMemo(() => {
     const numbers = [
-      ...new Set((publishedQuery.data ?? []).map((row) => row.episode_number).filter(Boolean)),
+      ...new Set(
+        (publishedQuery.data ?? [])
+          .map((row) => row.episode_number)
+          .filter(Boolean),
+      ),
     ] as number[]
     return numbers.sort((a, b) => a - b)
   }, [publishedQuery.data])
 
   const latestEpisode = publishedNumbers.at(-1) ?? null
-  const previousEpisode = publishedNumbers.length > 1 ? publishedNumbers.at(-2)! : null
+  const previousEpisode =
+    publishedNumbers.length > 1 ? publishedNumbers.at(-2)! : null
   const hasPublishedScores = publishedNumbers.length > 0
 
   const lastUpdated = useMemo(() => {
@@ -256,7 +291,10 @@ export function useLeagueWeek(league: ActiveLeague | null, view: LeagueWeekView)
   const episodePoints: MemberEpisodePoints[] = useMemo(
     () =>
       (episodeScoresQuery.data ?? []).flatMap((row) =>
-        row.league_id && row.member_id && row.episode_number != null && row.points != null
+        row.league_id &&
+        row.member_id &&
+        row.episode_number != null &&
+        row.points != null
           ? [
               {
                 leagueId: row.league_id,
@@ -290,7 +328,8 @@ export function useLeagueWeek(league: ActiveLeague | null, view: LeagueWeekView)
       })
     : null
 
-  const selfStanding = standings.find((row) => row.memberId === user?.id) ?? null
+  const selfStanding =
+    standings.find((row) => row.memberId === user?.id) ?? null
   const latestEpisodeMeta = (episodesQuery.data ?? []).find(
     (episode) => episode.episode_number === latestEpisode,
   )
@@ -364,7 +403,12 @@ export function useLeagueWeek(league: ActiveLeague | null, view: LeagueWeekView)
     loading,
     tribeLoading,
     fetching,
-    error: error instanceof Error ? error : error ? new Error('Could not load league week') : null,
+    error:
+      error instanceof Error
+        ? error
+        : error
+          ? new Error('Could not load league week')
+          : null,
     refetch: () => {
       if (needs('members')) void membersQuery.refetch()
       if (needs('episodeScores')) void episodeScoresQuery.refetch()

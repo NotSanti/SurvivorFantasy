@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: '14.5'
   }
   public: {
     Tables: {
@@ -59,7 +59,7 @@ export type Database = {
           source_alt_text_hash: string
           source_image_url: string | null
           source_run_id: string
-          status: Database["public"]["Enums"]["score_revision_status"]
+          status: Database['public']['Enums']['score_revision_status']
         }
         Insert: {
           castaway_id: string
@@ -72,7 +72,7 @@ export type Database = {
           source_alt_text_hash: string
           source_image_url?: string | null
           source_run_id: string
-          status: Database["public"]["Enums"]["score_revision_status"]
+          status: Database['public']['Enums']['score_revision_status']
         }
         Update: {
           castaway_id?: string
@@ -85,36 +85,36 @@ export type Database = {
           source_alt_text_hash?: string
           source_image_url?: string | null
           source_run_id?: string
-          status?: Database["public"]["Enums"]["score_revision_status"]
+          status?: Database['public']['Enums']['score_revision_status']
         }
         Relationships: [
           {
-            foreignKeyName: "castaway_episode_score_revisions_castaway_id_fkey"
-            columns: ["castaway_id"]
+            foreignKeyName: 'castaway_episode_score_revisions_castaway_id_fkey'
+            columns: ['castaway_id']
             isOneToOne: false
-            referencedRelation: "castaways"
-            referencedColumns: ["id"]
+            referencedRelation: 'castaways'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "castaway_episode_score_revisions_episode_id_fkey"
-            columns: ["episode_id"]
+            foreignKeyName: 'castaway_episode_score_revisions_episode_id_fkey'
+            columns: ['episode_id']
             isOneToOne: false
-            referencedRelation: "episodes"
-            referencedColumns: ["id"]
+            referencedRelation: 'episodes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "castaway_episode_score_revisions_season_id_fkey"
-            columns: ["season_id"]
+            foreignKeyName: 'castaway_episode_score_revisions_season_id_fkey'
+            columns: ['season_id']
             isOneToOne: false
-            referencedRelation: "seasons"
-            referencedColumns: ["id"]
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "castaway_episode_score_revisions_source_run_id_fkey"
-            columns: ["source_run_id"]
+            foreignKeyName: 'castaway_episode_score_revisions_source_run_id_fkey'
+            columns: ['source_run_id']
             isOneToOne: false
-            referencedRelation: "score_import_runs"
-            referencedColumns: ["id"]
+            referencedRelation: 'score_import_runs'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -139,18 +139,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "castaway_source_aliases_castaway_id_fkey"
-            columns: ["castaway_id"]
+            foreignKeyName: 'castaway_source_aliases_castaway_id_fkey'
+            columns: ['castaway_id']
             isOneToOne: false
-            referencedRelation: "castaways"
-            referencedColumns: ["id"]
+            referencedRelation: 'castaways'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "castaway_source_aliases_season_id_fkey"
-            columns: ["season_id"]
+            foreignKeyName: 'castaway_source_aliases_season_id_fkey'
+            columns: ['season_id']
             isOneToOne: false
-            referencedRelation: "seasons"
-            referencedColumns: ["id"]
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -164,7 +164,7 @@ export type Database = {
           photo_url: string | null
           season_id: string
           slug: string
-          status: Database["public"]["Enums"]["castaway_status"]
+          status: Database['public']['Enums']['castaway_status']
         }
         Insert: {
           display_name: string
@@ -175,7 +175,7 @@ export type Database = {
           photo_url?: string | null
           season_id: string
           slug: string
-          status?: Database["public"]["Enums"]["castaway_status"]
+          status?: Database['public']['Enums']['castaway_status']
         }
         Update: {
           display_name?: string
@@ -186,22 +186,22 @@ export type Database = {
           photo_url?: string | null
           season_id?: string
           slug?: string
-          status?: Database["public"]["Enums"]["castaway_status"]
+          status?: Database['public']['Enums']['castaway_status']
         }
         Relationships: [
           {
-            foreignKeyName: "castaways_original_tribe_id_fkey"
-            columns: ["original_tribe_id"]
+            foreignKeyName: 'castaways_original_tribe_id_fkey'
+            columns: ['original_tribe_id']
             isOneToOne: false
-            referencedRelation: "tribes"
-            referencedColumns: ["id"]
+            referencedRelation: 'tribes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "castaways_season_id_fkey"
-            columns: ["season_id"]
+            foreignKeyName: 'castaways_season_id_fkey'
+            columns: ['season_id']
             isOneToOne: false
-            referencedRelation: "seasons"
-            referencedColumns: ["id"]
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -210,39 +210,39 @@ export type Database = {
           airs_at: string | null
           episode_number: number
           id: string
-          phase: Database["public"]["Enums"]["episode_phase"] | null
+          phase: Database['public']['Enums']['episode_phase'] | null
           published_score_revision: number | null
           season_id: string
-          status: Database["public"]["Enums"]["episode_status"]
+          status: Database['public']['Enums']['episode_status']
           title: string | null
         }
         Insert: {
           airs_at?: string | null
           episode_number: number
           id?: string
-          phase?: Database["public"]["Enums"]["episode_phase"] | null
+          phase?: Database['public']['Enums']['episode_phase'] | null
           published_score_revision?: number | null
           season_id: string
-          status?: Database["public"]["Enums"]["episode_status"]
+          status?: Database['public']['Enums']['episode_status']
           title?: string | null
         }
         Update: {
           airs_at?: string | null
           episode_number?: number
           id?: string
-          phase?: Database["public"]["Enums"]["episode_phase"] | null
+          phase?: Database['public']['Enums']['episode_phase'] | null
           published_score_revision?: number | null
           season_id?: string
-          status?: Database["public"]["Enums"]["episode_status"]
+          status?: Database['public']['Enums']['episode_status']
           title?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "episodes_season_id_fkey"
-            columns: ["season_id"]
+            foreignKeyName: 'episodes_season_id_fkey'
+            columns: ['season_id']
             isOneToOne: false
-            referencedRelation: "seasons"
-            referencedColumns: ["id"]
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -282,66 +282,82 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "league_invites_created_by_fkey"
-            columns: ["created_by"]
+            foreignKeyName: 'league_invites_created_by_fkey'
+            columns: ['created_by']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "league_invites_league_id_fkey"
-            columns: ["league_id"]
+            foreignKeyName: 'league_invites_league_id_fkey'
+            columns: ['league_id']
             isOneToOne: false
-            referencedRelation: "leagues"
-            referencedColumns: ["id"]
+            referencedRelation: 'leagues'
+            referencedColumns: ['id']
           },
         ]
       }
       league_members: {
         Row: {
+          avatar_castaway_id: string | null
+          avatar_path: string | null
+          avatar_updated_at: string | null
           fantasy_tribe_color: string | null
           fantasy_tribe_name: string | null
           joined_at: string
           league_id: string
           ready_at: string | null
-          role: Database["public"]["Enums"]["league_member_role"]
-          status: Database["public"]["Enums"]["league_member_status"]
+          role: Database['public']['Enums']['league_member_role']
+          status: Database['public']['Enums']['league_member_status']
           user_id: string
         }
         Insert: {
+          avatar_castaway_id?: string | null
+          avatar_path?: string | null
+          avatar_updated_at?: string | null
           fantasy_tribe_color?: string | null
           fantasy_tribe_name?: string | null
           joined_at?: string
           league_id: string
           ready_at?: string | null
-          role?: Database["public"]["Enums"]["league_member_role"]
-          status?: Database["public"]["Enums"]["league_member_status"]
+          role?: Database['public']['Enums']['league_member_role']
+          status?: Database['public']['Enums']['league_member_status']
           user_id: string
         }
         Update: {
+          avatar_castaway_id?: string | null
+          avatar_path?: string | null
+          avatar_updated_at?: string | null
           fantasy_tribe_color?: string | null
           fantasy_tribe_name?: string | null
           joined_at?: string
           league_id?: string
           ready_at?: string | null
-          role?: Database["public"]["Enums"]["league_member_role"]
-          status?: Database["public"]["Enums"]["league_member_status"]
+          role?: Database['public']['Enums']['league_member_role']
+          status?: Database['public']['Enums']['league_member_status']
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "league_members_league_id_fkey"
-            columns: ["league_id"]
+            foreignKeyName: 'league_members_avatar_castaway_id_fkey'
+            columns: ['avatar_castaway_id']
             isOneToOne: false
-            referencedRelation: "leagues"
-            referencedColumns: ["id"]
+            referencedRelation: 'castaways'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "league_members_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'league_members_league_id_fkey'
+            columns: ['league_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'leagues'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'league_members_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -356,8 +372,8 @@ export type Database = {
           ruleset_version_id: string
           season_id: string
           selection_deadline: string | null
-          selection_mode: Database["public"]["Enums"]["selection_mode"]
-          status: Database["public"]["Enums"]["league_status"]
+          selection_mode: Database['public']['Enums']['selection_mode']
+          status: Database['public']['Enums']['league_status']
           updated_at: string
         }
         Insert: {
@@ -370,8 +386,8 @@ export type Database = {
           ruleset_version_id: string
           season_id: string
           selection_deadline?: string | null
-          selection_mode?: Database["public"]["Enums"]["selection_mode"]
-          status?: Database["public"]["Enums"]["league_status"]
+          selection_mode?: Database['public']['Enums']['selection_mode']
+          status?: Database['public']['Enums']['league_status']
           updated_at?: string
         }
         Update: {
@@ -384,31 +400,31 @@ export type Database = {
           ruleset_version_id?: string
           season_id?: string
           selection_deadline?: string | null
-          selection_mode?: Database["public"]["Enums"]["selection_mode"]
-          status?: Database["public"]["Enums"]["league_status"]
+          selection_mode?: Database['public']['Enums']['selection_mode']
+          status?: Database['public']['Enums']['league_status']
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "leagues_commissioner_id_fkey"
-            columns: ["commissioner_id"]
+            foreignKeyName: 'leagues_commissioner_id_fkey'
+            columns: ['commissioner_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "leagues_ruleset_version_id_fkey"
-            columns: ["ruleset_version_id"]
+            foreignKeyName: 'leagues_ruleset_version_id_fkey'
+            columns: ['ruleset_version_id']
             isOneToOne: false
-            referencedRelation: "rule_sets"
-            referencedColumns: ["id"]
+            referencedRelation: 'rule_sets'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "leagues_season_id_fkey"
-            columns: ["season_id"]
+            foreignKeyName: 'leagues_season_id_fkey'
+            columns: ['season_id']
             isOneToOne: false
-            referencedRelation: "seasons"
-            referencedColumns: ["id"]
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -420,7 +436,7 @@ export type Database = {
           league_id: string
           locked_at: string
           member_id: string
-          move_type: Database["public"]["Enums"]["merge_move_type"]
+          move_type: Database['public']['Enums']['merge_move_type']
           out_roster_entry_id: string | null
         }
         Insert: {
@@ -430,7 +446,7 @@ export type Database = {
           league_id: string
           locked_at?: string
           member_id: string
-          move_type: Database["public"]["Enums"]["merge_move_type"]
+          move_type: Database['public']['Enums']['merge_move_type']
           out_roster_entry_id?: string | null
         }
         Update: {
@@ -440,37 +456,37 @@ export type Database = {
           league_id?: string
           locked_at?: string
           member_id?: string
-          move_type?: Database["public"]["Enums"]["merge_move_type"]
+          move_type?: Database['public']['Enums']['merge_move_type']
           out_roster_entry_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "merge_moves_in_castaway_id_fkey"
-            columns: ["in_castaway_id"]
+            foreignKeyName: 'merge_moves_in_castaway_id_fkey'
+            columns: ['in_castaway_id']
             isOneToOne: false
-            referencedRelation: "castaways"
-            referencedColumns: ["id"]
+            referencedRelation: 'castaways'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "merge_moves_league_id_fkey"
-            columns: ["league_id"]
+            foreignKeyName: 'merge_moves_league_id_fkey'
+            columns: ['league_id']
             isOneToOne: false
-            referencedRelation: "leagues"
-            referencedColumns: ["id"]
+            referencedRelation: 'leagues'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "merge_moves_member_id_fkey"
-            columns: ["member_id"]
+            foreignKeyName: 'merge_moves_member_id_fkey'
+            columns: ['member_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "merge_moves_out_roster_entry_id_fkey"
-            columns: ["out_roster_entry_id"]
+            foreignKeyName: 'merge_moves_out_roster_entry_id_fkey'
+            columns: ['out_roster_entry_id']
             isOneToOne: false
-            referencedRelation: "roster_entries"
-            referencedColumns: ["id"]
+            referencedRelation: 'roster_entries'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -495,25 +511,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "mvp_selections_castaway_id_fkey"
-            columns: ["castaway_id"]
+            foreignKeyName: 'mvp_selections_castaway_id_fkey'
+            columns: ['castaway_id']
             isOneToOne: false
-            referencedRelation: "castaways"
-            referencedColumns: ["id"]
+            referencedRelation: 'castaways'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "mvp_selections_league_id_fkey"
-            columns: ["league_id"]
+            foreignKeyName: 'mvp_selections_league_id_fkey'
+            columns: ['league_id']
             isOneToOne: false
-            referencedRelation: "leagues"
-            referencedColumns: ["id"]
+            referencedRelation: 'leagues'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "mvp_selections_member_id_fkey"
-            columns: ["member_id"]
+            foreignKeyName: 'mvp_selections_member_id_fkey'
+            columns: ['member_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -526,7 +542,7 @@ export type Database = {
           id: string
           last_error_redacted: string | null
           payload: Json
-          status: Database["public"]["Enums"]["outbox_status"]
+          status: Database['public']['Enums']['outbox_status']
           user_id: string
         }
         Insert: {
@@ -537,7 +553,7 @@ export type Database = {
           id?: string
           last_error_redacted?: string | null
           payload: Json
-          status?: Database["public"]["Enums"]["outbox_status"]
+          status?: Database['public']['Enums']['outbox_status']
           user_id: string
         }
         Update: {
@@ -548,16 +564,16 @@ export type Database = {
           id?: string
           last_error_redacted?: string | null
           payload?: Json
-          status?: Database["public"]["Enums"]["outbox_status"]
+          status?: Database['public']['Enums']['outbox_status']
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "notification_outbox_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'notification_outbox_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -600,11 +616,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "notification_preferences_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'notification_preferences_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -644,25 +660,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "notifications_episode_id_fkey"
-            columns: ["episode_id"]
+            foreignKeyName: 'notifications_episode_id_fkey'
+            columns: ['episode_id']
             isOneToOne: false
-            referencedRelation: "episodes"
-            referencedColumns: ["id"]
+            referencedRelation: 'episodes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "notifications_league_id_fkey"
-            columns: ["league_id"]
+            foreignKeyName: 'notifications_league_id_fkey'
+            columns: ['league_id']
             isOneToOne: false
-            referencedRelation: "leagues"
-            referencedColumns: ["id"]
+            referencedRelation: 'leagues'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'notifications_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -738,17 +754,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'push_subscriptions_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
       roster_entries: {
         Row: {
-          acquisition_type: Database["public"]["Enums"]["roster_acquisition_type"]
+          acquisition_type: Database['public']['Enums']['roster_acquisition_type']
           castaway_id: string
           created_at: string
           ends_episode: number | null
@@ -762,7 +778,7 @@ export type Database = {
           starts_episode: number
         }
         Insert: {
-          acquisition_type: Database["public"]["Enums"]["roster_acquisition_type"]
+          acquisition_type: Database['public']['Enums']['roster_acquisition_type']
           castaway_id: string
           created_at?: string
           ends_episode?: number | null
@@ -776,7 +792,7 @@ export type Database = {
           starts_episode: number
         }
         Update: {
-          acquisition_type?: Database["public"]["Enums"]["roster_acquisition_type"]
+          acquisition_type?: Database['public']['Enums']['roster_acquisition_type']
           castaway_id?: string
           created_at?: string
           ends_episode?: number | null
@@ -791,32 +807,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "roster_entries_castaway_id_fkey"
-            columns: ["castaway_id"]
+            foreignKeyName: 'roster_entries_castaway_id_fkey'
+            columns: ['castaway_id']
             isOneToOne: false
-            referencedRelation: "castaways"
-            referencedColumns: ["id"]
+            referencedRelation: 'castaways'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "roster_entries_league_id_fkey"
-            columns: ["league_id"]
+            foreignKeyName: 'roster_entries_league_id_fkey'
+            columns: ['league_id']
             isOneToOne: false
-            referencedRelation: "leagues"
-            referencedColumns: ["id"]
+            referencedRelation: 'leagues'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "roster_entries_member_id_fkey"
-            columns: ["member_id"]
+            foreignKeyName: 'roster_entries_member_id_fkey'
+            columns: ['member_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "roster_entries_replaces_roster_entry_id_fkey"
-            columns: ["replaces_roster_entry_id"]
+            foreignKeyName: 'roster_entries_replaces_roster_entry_id_fkey'
+            columns: ['replaces_roster_entry_id']
             isOneToOne: false
-            referencedRelation: "roster_entries"
-            referencedColumns: ["id"]
+            referencedRelation: 'roster_entries'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -833,7 +849,7 @@ export type Database = {
           source_hash: string
           source_modified_at: string | null
           source_url: string
-          status: Database["public"]["Enums"]["rule_set_status"]
+          status: Database['public']['Enums']['rule_set_status']
           version: number
           wildcard_slots: number
         }
@@ -849,7 +865,7 @@ export type Database = {
           source_hash: string
           source_modified_at?: string | null
           source_url: string
-          status?: Database["public"]["Enums"]["rule_set_status"]
+          status?: Database['public']['Enums']['rule_set_status']
           version: number
           wildcard_slots?: number
         }
@@ -865,17 +881,17 @@ export type Database = {
           source_hash?: string
           source_modified_at?: string | null
           source_url?: string
-          status?: Database["public"]["Enums"]["rule_set_status"]
+          status?: Database['public']['Enums']['rule_set_status']
           version?: number
           wildcard_slots?: number
         }
         Relationships: [
           {
-            foreignKeyName: "rule_sets_season_id_fkey"
-            columns: ["season_id"]
+            foreignKeyName: 'rule_sets_season_id_fkey'
+            columns: ['season_id']
             isOneToOne: false
-            referencedRelation: "seasons"
-            referencedColumns: ["id"]
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -894,8 +910,8 @@ export type Database = {
           source_post_id: number | null
           source_url: string | null
           started_at: string
-          status: Database["public"]["Enums"]["rule_sync_status"]
-          trigger_type: Database["public"]["Enums"]["import_trigger_type"]
+          status: Database['public']['Enums']['rule_sync_status']
+          trigger_type: Database['public']['Enums']['import_trigger_type']
         }
         Insert: {
           error_code?: string | null
@@ -911,8 +927,8 @@ export type Database = {
           source_post_id?: number | null
           source_url?: string | null
           started_at?: string
-          status: Database["public"]["Enums"]["rule_sync_status"]
-          trigger_type?: Database["public"]["Enums"]["import_trigger_type"]
+          status: Database['public']['Enums']['rule_sync_status']
+          trigger_type?: Database['public']['Enums']['import_trigger_type']
         }
         Update: {
           error_code?: string | null
@@ -928,23 +944,23 @@ export type Database = {
           source_post_id?: number | null
           source_url?: string | null
           started_at?: string
-          status?: Database["public"]["Enums"]["rule_sync_status"]
-          trigger_type?: Database["public"]["Enums"]["import_trigger_type"]
+          status?: Database['public']['Enums']['rule_sync_status']
+          trigger_type?: Database['public']['Enums']['import_trigger_type']
         }
         Relationships: [
           {
-            foreignKeyName: "rule_sync_runs_proposed_rule_set_id_fkey"
-            columns: ["proposed_rule_set_id"]
+            foreignKeyName: 'rule_sync_runs_proposed_rule_set_id_fkey'
+            columns: ['proposed_rule_set_id']
             isOneToOne: false
-            referencedRelation: "rule_sets"
-            referencedColumns: ["id"]
+            referencedRelation: 'rule_sets'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "rule_sync_runs_season_id_fkey"
-            columns: ["season_id"]
+            foreignKeyName: 'rule_sync_runs_season_id_fkey'
+            columns: ['season_id']
             isOneToOne: false
-            referencedRelation: "seasons"
-            referencedColumns: ["id"]
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -972,25 +988,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "score_events_score_revision_id_fkey"
-            columns: ["score_revision_id"]
+            foreignKeyName: 'score_events_score_revision_id_fkey'
+            columns: ['score_revision_id']
             isOneToOne: false
-            referencedRelation: "castaway_episode_score_revisions"
-            referencedColumns: ["id"]
+            referencedRelation: 'castaway_episode_score_revisions'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "score_events_score_revision_id_fkey"
-            columns: ["score_revision_id"]
+            foreignKeyName: 'score_events_score_revision_id_fkey'
+            columns: ['score_revision_id']
             isOneToOne: false
-            referencedRelation: "published_castaway_episode_scores"
-            referencedColumns: ["id"]
+            referencedRelation: 'published_castaway_episode_scores'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "score_events_scoring_rule_id_fkey"
-            columns: ["scoring_rule_id"]
+            foreignKeyName: 'score_events_scoring_rule_id_fkey'
+            columns: ['scoring_rule_id']
             isOneToOne: false
-            referencedRelation: "scoring_rules"
-            referencedColumns: ["id"]
+            referencedRelation: 'scoring_rules'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1009,9 +1025,9 @@ export type Database = {
           source_post_id: number | null
           source_url: string
           started_at: string
-          status: Database["public"]["Enums"]["import_status"]
+          status: Database['public']['Enums']['import_status']
           summary: Json | null
-          trigger_type: Database["public"]["Enums"]["import_trigger_type"]
+          trigger_type: Database['public']['Enums']['import_trigger_type']
         }
         Insert: {
           error_code?: string | null
@@ -1027,9 +1043,9 @@ export type Database = {
           source_post_id?: number | null
           source_url: string
           started_at?: string
-          status?: Database["public"]["Enums"]["import_status"]
+          status?: Database['public']['Enums']['import_status']
           summary?: Json | null
-          trigger_type: Database["public"]["Enums"]["import_trigger_type"]
+          trigger_type: Database['public']['Enums']['import_trigger_type']
         }
         Update: {
           error_code?: string | null
@@ -1045,17 +1061,17 @@ export type Database = {
           source_post_id?: number | null
           source_url?: string
           started_at?: string
-          status?: Database["public"]["Enums"]["import_status"]
+          status?: Database['public']['Enums']['import_status']
           summary?: Json | null
-          trigger_type?: Database["public"]["Enums"]["import_trigger_type"]
+          trigger_type?: Database['public']['Enums']['import_trigger_type']
         }
         Relationships: [
           {
-            foreignKeyName: "score_import_runs_season_id_fkey"
-            columns: ["season_id"]
+            foreignKeyName: 'score_import_runs_season_id_fkey'
+            columns: ['season_id']
             isOneToOne: false
-            referencedRelation: "seasons"
-            referencedColumns: ["id"]
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1063,10 +1079,10 @@ export type Database = {
         Row: {
           code: string
           id: string
-          kind: Database["public"]["Enums"]["scoring_rule_kind"]
+          kind: Database['public']['Enums']['scoring_rule_kind']
           label: string
           max_occurrences_per_castaway_episode: number | null
-          phase: Database["public"]["Enums"]["scoring_phase"]
+          phase: Database['public']['Enums']['scoring_phase']
           points: number
           rule_set_id: string
           sort_order: number
@@ -1074,10 +1090,10 @@ export type Database = {
         Insert: {
           code: string
           id?: string
-          kind: Database["public"]["Enums"]["scoring_rule_kind"]
+          kind: Database['public']['Enums']['scoring_rule_kind']
           label: string
           max_occurrences_per_castaway_episode?: number | null
-          phase?: Database["public"]["Enums"]["scoring_phase"]
+          phase?: Database['public']['Enums']['scoring_phase']
           points: number
           rule_set_id: string
           sort_order: number
@@ -1085,21 +1101,21 @@ export type Database = {
         Update: {
           code?: string
           id?: string
-          kind?: Database["public"]["Enums"]["scoring_rule_kind"]
+          kind?: Database['public']['Enums']['scoring_rule_kind']
           label?: string
           max_occurrences_per_castaway_episode?: number | null
-          phase?: Database["public"]["Enums"]["scoring_phase"]
+          phase?: Database['public']['Enums']['scoring_phase']
           points?: number
           rule_set_id?: string
           sort_order?: number
         }
         Relationships: [
           {
-            foreignKeyName: "scoring_rules_rule_set_id_fkey"
-            columns: ["rule_set_id"]
+            foreignKeyName: 'scoring_rules_rule_set_id_fkey'
+            columns: ['rule_set_id']
             isOneToOne: false
-            referencedRelation: "rule_sets"
-            referencedColumns: ["id"]
+            referencedRelation: 'rule_sets'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1116,7 +1132,7 @@ export type Database = {
           source_checked_at: string | null
           source_page_url: string | null
           source_wp_post_id: number | null
-          status: Database["public"]["Enums"]["season_status"]
+          status: Database['public']['Enums']['season_status']
           timezone: string
           updated_at: string
         }
@@ -1132,7 +1148,7 @@ export type Database = {
           source_checked_at?: string | null
           source_page_url?: string | null
           source_wp_post_id?: number | null
-          status?: Database["public"]["Enums"]["season_status"]
+          status?: Database['public']['Enums']['season_status']
           timezone?: string
           updated_at?: string
         }
@@ -1148,7 +1164,7 @@ export type Database = {
           source_checked_at?: string | null
           source_page_url?: string | null
           source_wp_post_id?: number | null
-          status?: Database["public"]["Enums"]["season_status"]
+          status?: Database['public']['Enums']['season_status']
           timezone?: string
           updated_at?: string
         }
@@ -1190,18 +1206,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "selection_sessions_league_id_fkey"
-            columns: ["league_id"]
+            foreignKeyName: 'selection_sessions_league_id_fkey'
+            columns: ['league_id']
             isOneToOne: true
-            referencedRelation: "leagues"
-            referencedColumns: ["id"]
+            referencedRelation: 'leagues'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "selection_sessions_rule_set_id_fkey"
-            columns: ["rule_set_id"]
+            foreignKeyName: 'selection_sessions_rule_set_id_fkey'
+            columns: ['rule_set_id']
             isOneToOne: false
-            referencedRelation: "rule_sets"
-            referencedColumns: ["id"]
+            referencedRelation: 'rule_sets'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1232,11 +1248,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "tribes_season_id_fkey"
-            columns: ["season_id"]
+            foreignKeyName: 'tribes_season_id_fkey'
+            columns: ['season_id']
             isOneToOne: false
-            referencedRelation: "seasons"
-            referencedColumns: ["id"]
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1276,25 +1292,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "wildcard_audits_league_id_fkey"
-            columns: ["league_id"]
+            foreignKeyName: 'wildcard_audits_league_id_fkey'
+            columns: ['league_id']
             isOneToOne: false
-            referencedRelation: "leagues"
-            referencedColumns: ["id"]
+            referencedRelation: 'leagues'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "wildcard_audits_member_id_fkey"
-            columns: ["member_id"]
+            foreignKeyName: 'wildcard_audits_member_id_fkey'
+            columns: ['member_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "wildcard_audits_selected_castaway_id_fkey"
-            columns: ["selected_castaway_id"]
+            foreignKeyName: 'wildcard_audits_selected_castaway_id_fkey'
+            columns: ['selected_castaway_id']
             isOneToOne: false
-            referencedRelation: "castaways"
-            referencedColumns: ["id"]
+            referencedRelation: 'castaways'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1310,18 +1326,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "league_members_league_id_fkey"
-            columns: ["league_id"]
+            foreignKeyName: 'league_members_league_id_fkey'
+            columns: ['league_id']
             isOneToOne: false
-            referencedRelation: "leagues"
-            referencedColumns: ["id"]
+            referencedRelation: 'leagues'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "league_members_user_id_fkey"
-            columns: ["member_id"]
+            foreignKeyName: 'league_members_user_id_fkey'
+            columns: ['member_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1333,26 +1349,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "league_members_league_id_fkey"
-            columns: ["league_id"]
+            foreignKeyName: 'league_members_league_id_fkey'
+            columns: ['league_id']
             isOneToOne: false
-            referencedRelation: "leagues"
-            referencedColumns: ["id"]
+            referencedRelation: 'leagues'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "league_members_user_id_fkey"
-            columns: ["member_id"]
+            foreignKeyName: 'league_members_user_id_fkey'
+            columns: ['member_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
       member_episode_castaway_scores: {
         Row: {
           acquisition_type:
-            | Database["public"]["Enums"]["roster_acquisition_type"]
-            | null
+            Database['public']['Enums']['roster_acquisition_type'] | null
           castaway_id: string | null
           ends_episode: number | null
           episode_id: string | null
@@ -1391,25 +1406,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "castaway_episode_score_revisions_castaway_id_fkey"
-            columns: ["castaway_id"]
+            foreignKeyName: 'castaway_episode_score_revisions_castaway_id_fkey'
+            columns: ['castaway_id']
             isOneToOne: false
-            referencedRelation: "castaways"
-            referencedColumns: ["id"]
+            referencedRelation: 'castaways'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "castaway_episode_score_revisions_episode_id_fkey"
-            columns: ["episode_id"]
+            foreignKeyName: 'castaway_episode_score_revisions_episode_id_fkey'
+            columns: ['episode_id']
             isOneToOne: false
-            referencedRelation: "episodes"
-            referencedColumns: ["id"]
+            referencedRelation: 'episodes'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "castaway_episode_score_revisions_season_id_fkey"
-            columns: ["season_id"]
+            foreignKeyName: 'castaway_episode_score_revisions_season_id_fkey'
+            columns: ['season_id']
             isOneToOne: false
-            referencedRelation: "seasons"
-            referencedColumns: ["id"]
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1427,13 +1442,33 @@ export type Database = {
           ruleset_version_id: string
           season_id: string
           selection_deadline: string | null
-          selection_mode: Database["public"]["Enums"]["selection_mode"]
-          status: Database["public"]["Enums"]["league_status"]
+          selection_mode: Database['public']['Enums']['selection_mode']
+          status: Database['public']['Enums']['league_status']
           updated_at: string
         }
         SetofOptions: {
-          from: "*"
-          to: "leagues"
+          from: '*'
+          to: 'leagues'
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      ack_draft_order: {
+        Args: { p_league_id: string }
+        Returns: {
+          current_pick_index: number
+          draft_phase: string
+          league_id: string
+          locked_at: string | null
+          order_seed: string | null
+          pick_order: string[]
+          rule_set_id: string
+          started_at: string
+          tribe_order: string[]
+        }
+        SetofOptions: {
+          from: '*'
+          to: 'selection_sessions'
           isOneToOne: true
           isSetofReturn: false
         }
@@ -1451,12 +1486,12 @@ export type Database = {
           id: string
           last_error_redacted: string | null
           payload: Json
-          status: Database["public"]["Enums"]["outbox_status"]
+          status: Database['public']['Enums']['outbox_status']
           user_id: string
         }[]
         SetofOptions: {
-          from: "*"
-          to: "notification_outbox"
+          from: '*'
+          to: 'notification_outbox'
           isOneToOne: false
           isSetofReturn: true
         }
@@ -1467,7 +1502,7 @@ export type Database = {
           p_available_at?: string
           p_error_redacted?: string
           p_id: string
-          p_status: Database["public"]["Enums"]["outbox_status"]
+          p_status: Database['public']['Enums']['outbox_status']
         }
         Returns: undefined
       }
@@ -1483,27 +1518,8 @@ export type Database = {
           updated_at: string
         }
         SetofOptions: {
-          from: "*"
-          to: "profiles"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      update_fantasy_tribe: {
-        Args: { p_color: string; p_league_id: string; p_name: string }
-        Returns: {
-          fantasy_tribe_color: string | null
-          fantasy_tribe_name: string | null
-          joined_at: string
-          league_id: string
-          ready_at: string | null
-          role: Database["public"]["Enums"]["league_member_role"]
-          status: Database["public"]["Enums"]["league_member_status"]
-          user_id: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "league_members"
+          from: '*'
+          to: 'profiles'
           isOneToOne: true
           isSetofReturn: false
         }
@@ -1522,13 +1538,13 @@ export type Database = {
           source_hash: string
           source_modified_at: string | null
           source_url: string
-          status: Database["public"]["Enums"]["rule_set_status"]
+          status: Database['public']['Enums']['rule_set_status']
           version: number
           wildcard_slots: number
         }
         SetofOptions: {
-          from: "*"
-          to: "rule_sets"
+          from: '*'
+          to: 'rule_sets'
           isOneToOne: true
           isSetofReturn: false
         }
@@ -1545,13 +1561,13 @@ export type Database = {
           ruleset_version_id: string
           season_id: string
           selection_deadline: string | null
-          selection_mode: Database["public"]["Enums"]["selection_mode"]
-          status: Database["public"]["Enums"]["league_status"]
+          selection_mode: Database['public']['Enums']['selection_mode']
+          status: Database['public']['Enums']['league_status']
           updated_at: string
         }
         SetofOptions: {
-          from: "*"
-          to: "leagues"
+          from: '*'
+          to: 'leagues'
           isOneToOne: true
           isSetofReturn: false
         }
@@ -1568,7 +1584,7 @@ export type Database = {
         Args: {
           p_season_id: string
           p_source_url: string
-          p_trigger_type: Database["public"]["Enums"]["import_trigger_type"]
+          p_trigger_type: Database['public']['Enums']['import_trigger_type']
         }
         Returns: string
       }
@@ -1580,6 +1596,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      dismiss_notifications: { Args: { p_ids: string[] }; Returns: undefined }
       enqueue_score_notifications: {
         Args: { p_episode_id: string; p_kind: string }
         Returns: undefined
@@ -1591,7 +1608,7 @@ export type Database = {
           p_http_status?: number
           p_run_id: string
           p_source_hash?: string
-          p_status: Database["public"]["Enums"]["import_status"]
+          p_status: Database['public']['Enums']['import_status']
           p_summary: Json
         }
         Returns: undefined
@@ -1607,7 +1624,6 @@ export type Database = {
         Returns: undefined
       }
       mark_notifications_read: { Args: { p_ids: string[] }; Returns: undefined }
-      dismiss_notifications: { Args: { p_ids: string[] }; Returns: undefined }
       publish_episode_scores: {
         Args: {
           p_episode_number: number
@@ -1641,8 +1657,8 @@ export type Database = {
           user_id: string
         }
         SetofOptions: {
-          from: "*"
-          to: "push_subscriptions"
+          from: '*'
+          to: 'push_subscriptions'
           isOneToOne: true
           isSetofReturn: false
         }
@@ -1680,29 +1696,35 @@ export type Database = {
         Args: { p_episode_number: number; p_season_id: string }
         Returns: undefined
       }
-      start_league_selection: {
-        Args: { p_league_id: string }
-        Returns: undefined
-      }
-      ack_draft_order: {
-        Args: { p_league_id: string }
+      set_tribe_avatar: {
+        Args: {
+          p_avatar_path?: string
+          p_castaway_id?: string
+          p_league_id: string
+        }
         Returns: {
-          current_pick_index: number
-          draft_phase: string
+          avatar_castaway_id: string | null
+          avatar_path: string | null
+          avatar_updated_at: string | null
+          fantasy_tribe_color: string | null
+          fantasy_tribe_name: string | null
+          joined_at: string
           league_id: string
-          locked_at: string | null
-          order_seed: string | null
-          pick_order: string[]
-          rule_set_id: string
-          started_at: string
-          tribe_order: string[]
+          ready_at: string | null
+          role: Database['public']['Enums']['league_member_role']
+          status: Database['public']['Enums']['league_member_status']
+          user_id: string
         }
         SetofOptions: {
-          from: "*"
-          to: "selection_sessions"
+          from: '*'
+          to: 'league_members'
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      start_league_selection: {
+        Args: { p_league_id: string }
+        Returns: undefined
       }
       submit_draft_pick: {
         Args: { p_castaway_id: string; p_league_id: string }
@@ -1718,8 +1740,8 @@ export type Database = {
           tribe_order: string[]
         }
         SetofOptions: {
-          from: "*"
-          to: "selection_sessions"
+          from: '*'
+          to: 'selection_sessions'
           isOneToOne: true
           isSetofReturn: false
         }
@@ -1737,12 +1759,34 @@ export type Database = {
           league_id: string
           locked_at: string
           member_id: string
-          move_type: Database["public"]["Enums"]["merge_move_type"]
+          move_type: Database['public']['Enums']['merge_move_type']
           out_roster_entry_id: string | null
         }
         SetofOptions: {
-          from: "*"
-          to: "merge_moves"
+          from: '*'
+          to: 'merge_moves'
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_fantasy_tribe: {
+        Args: { p_color: string; p_league_id: string; p_name: string }
+        Returns: {
+          avatar_castaway_id: string | null
+          avatar_path: string | null
+          avatar_updated_at: string | null
+          fantasy_tribe_color: string | null
+          fantasy_tribe_name: string | null
+          joined_at: string
+          league_id: string
+          ready_at: string | null
+          role: Database['public']['Enums']['league_member_role']
+          status: Database['public']['Enums']['league_member_status']
+          user_id: string
+        }
+        SetofOptions: {
+          from: '*'
+          to: 'league_members'
           isOneToOne: true
           isSetofReturn: false
         }
@@ -1758,52 +1802,45 @@ export type Database = {
       }
     }
     Enums: {
-      castaway_status: "active" | "eliminated" | "withdrawn"
-      episode_phase: "pre_merge" | "merge" | "post_merge" | "finale"
+      castaway_status: 'active' | 'eliminated' | 'withdrawn'
+      episode_phase: 'pre_merge' | 'merge' | 'post_merge' | 'finale'
       episode_status:
-        | "scheduled"
-        | "results_pending"
-        | "parsed"
-        | "published"
-        | "corrected"
-        | "needs_review"
+        | 'scheduled'
+        | 'results_pending'
+        | 'parsed'
+        | 'published'
+        | 'corrected'
+        | 'needs_review'
       import_status:
-        | "started"
-        | "succeeded"
-        | "noop"
-        | "needs_review"
-        | "failed"
-      import_trigger_type: "schedule" | "manual" | "retry"
-      league_member_role: "commissioner" | "member"
-      league_member_status: "active" | "left" | "removed"
+        'started' | 'succeeded' | 'noop' | 'needs_review' | 'failed'
+      import_trigger_type: 'schedule' | 'manual' | 'retry'
+      league_member_role: 'commissioner' | 'member'
+      league_member_status: 'active' | 'left' | 'removed'
       league_status:
-        | "recruiting"
-        | "selecting"
-        | "locked"
-        | "active_pre_merge"
-        | "merge_window"
-        | "active_post_merge"
-        | "finished"
-        | "archived"
-      merge_move_type: "add" | "swap"
-      outbox_status: "pending" | "processing" | "sent" | "dead_letter"
+        | 'recruiting'
+        | 'selecting'
+        | 'locked'
+        | 'active_pre_merge'
+        | 'merge_window'
+        | 'active_post_merge'
+        | 'finished'
+        | 'archived'
+      merge_move_type: 'add' | 'swap'
+      outbox_status: 'pending' | 'processing' | 'sent' | 'dead_letter'
       roster_acquisition_type:
-        | "manual"
-        | "wildcard"
-        | "merge_add"
-        | "merge_swap_in"
-      rule_set_status: "draft" | "confirmed" | "retired"
+        'manual' | 'wildcard' | 'merge_add' | 'merge_swap_in'
+      rule_set_status: 'draft' | 'confirmed' | 'retired'
       rule_sync_status:
-        | "not_published_yet"
-        | "noop"
-        | "draft_created"
-        | "parse_failed"
-        | "fetch_failed"
-      score_revision_status: "parsed" | "published" | "superseded"
-      scoring_phase: "pre_merge" | "post_merge" | "finale" | "any"
-      scoring_rule_kind: "survival" | "weekly_category" | "placement" | "mvp"
-      season_status: "upcoming" | "active" | "finished" | "archived"
-      selection_mode: "global_shared_pool" | "exclusive_snake"
+        | 'not_published_yet'
+        | 'noop'
+        | 'draft_created'
+        | 'parse_failed'
+        | 'fetch_failed'
+      score_revision_status: 'parsed' | 'published' | 'superseded'
+      scoring_phase: 'pre_merge' | 'post_merge' | 'finale' | 'any'
+      scoring_rule_kind: 'survival' | 'weekly_category' | 'placement' | 'mvp'
+      season_status: 'upcoming' | 'active' | 'finished' | 'archived'
+      selection_mode: 'global_shared_pool' | 'exclusive_snake'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1811,33 +1848,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
     : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -1846,23 +1883,22 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -1871,23 +1907,22 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -1896,86 +1931,85 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema['Enums'] | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
     : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
+    | keyof DefaultSchema['CompositeTypes']
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
     : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
   public: {
     Enums: {
-      castaway_status: ["active", "eliminated", "withdrawn"],
-      episode_phase: ["pre_merge", "merge", "post_merge", "finale"],
+      castaway_status: ['active', 'eliminated', 'withdrawn'],
+      episode_phase: ['pre_merge', 'merge', 'post_merge', 'finale'],
       episode_status: [
-        "scheduled",
-        "results_pending",
-        "parsed",
-        "published",
-        "corrected",
-        "needs_review",
+        'scheduled',
+        'results_pending',
+        'parsed',
+        'published',
+        'corrected',
+        'needs_review',
       ],
-      import_status: ["started", "succeeded", "noop", "needs_review", "failed"],
-      import_trigger_type: ["schedule", "manual", "retry"],
-      league_member_role: ["commissioner", "member"],
-      league_member_status: ["active", "left", "removed"],
+      import_status: ['started', 'succeeded', 'noop', 'needs_review', 'failed'],
+      import_trigger_type: ['schedule', 'manual', 'retry'],
+      league_member_role: ['commissioner', 'member'],
+      league_member_status: ['active', 'left', 'removed'],
       league_status: [
-        "recruiting",
-        "selecting",
-        "locked",
-        "active_pre_merge",
-        "merge_window",
-        "active_post_merge",
-        "finished",
-        "archived",
+        'recruiting',
+        'selecting',
+        'locked',
+        'active_pre_merge',
+        'merge_window',
+        'active_post_merge',
+        'finished',
+        'archived',
       ],
-      merge_move_type: ["add", "swap"],
-      outbox_status: ["pending", "processing", "sent", "dead_letter"],
+      merge_move_type: ['add', 'swap'],
+      outbox_status: ['pending', 'processing', 'sent', 'dead_letter'],
       roster_acquisition_type: [
-        "manual",
-        "wildcard",
-        "merge_add",
-        "merge_swap_in",
+        'manual',
+        'wildcard',
+        'merge_add',
+        'merge_swap_in',
       ],
-      rule_set_status: ["draft", "confirmed", "retired"],
+      rule_set_status: ['draft', 'confirmed', 'retired'],
       rule_sync_status: [
-        "not_published_yet",
-        "noop",
-        "draft_created",
-        "parse_failed",
-        "fetch_failed",
+        'not_published_yet',
+        'noop',
+        'draft_created',
+        'parse_failed',
+        'fetch_failed',
       ],
-      score_revision_status: ["parsed", "published", "superseded"],
-      scoring_phase: ["pre_merge", "post_merge", "finale", "any"],
-      scoring_rule_kind: ["survival", "weekly_category", "placement", "mvp"],
-      season_status: ["upcoming", "active", "finished", "archived"],
-      selection_mode: ["global_shared_pool", "exclusive_snake"],
+      score_revision_status: ['parsed', 'published', 'superseded'],
+      scoring_phase: ['pre_merge', 'post_merge', 'finale', 'any'],
+      scoring_rule_kind: ['survival', 'weekly_category', 'placement', 'mvp'],
+      season_status: ['upcoming', 'active', 'finished', 'archived'],
+      selection_mode: ['global_shared_pool', 'exclusive_snake'],
     },
   },
 } as const

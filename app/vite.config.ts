@@ -20,7 +20,7 @@ function contentSecurityPolicy(dev: boolean) {
     // Vite + React refresh inject inline module preambles in development only.
     `script-src 'self' 'wasm-unsafe-eval'${dev ? " 'unsafe-inline'" : ''}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    "img-src 'self' data: blob: https://*.supabase.co",
     "font-src 'self' data:",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
     "worker-src 'self'",
