@@ -87,7 +87,7 @@ describe('createLimitedFetch', () => {
   })
 
   it('leaves the cache mode unset when the caller asks', async () => {
-    const base = vi.fn(() => Promise.resolve(new Response('ok')))
+    const base = vi.fn((..._args: Parameters<typeof fetch>) => Promise.resolve(new Response('ok')))
     const fetch = createLimitedFetch({
       limit: 1,
       timeoutMs: 5_000,
@@ -95,8 +95,7 @@ describe('createLimitedFetch', () => {
       cache: () => undefined,
     })
     await fetch('/scores', { cache: 'no-store' })
-    const init = base.mock.calls[0]?.[1] as RequestInit
-    expect(init.cache).toBeUndefined()
+    expect(base.mock.calls[0]?.[1]?.cache).toBeUndefined()
   })
 
   it('does not start a queued request after the caller aborts', async () => {
