@@ -87,7 +87,7 @@ describe('createLimitedFetch', () => {
   })
 
   it('leaves the cache mode unset when the caller asks', async () => {
-    const base = vi.fn((..._args: Parameters<typeof fetch>) => Promise.resolve(new Response('ok')))
+    const base = vi.fn<typeof fetch>(() => Promise.resolve(new Response('ok')))
     const fetch = createLimitedFetch({
       limit: 1,
       timeoutMs: 5_000,
