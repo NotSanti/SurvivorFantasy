@@ -201,6 +201,9 @@ body {
   html {
     @apply font-sans;
   }
+  html.pwa-pull {
+    overscroll-behavior-y: none;
+  }
   h1,
   h2,
   h3,
