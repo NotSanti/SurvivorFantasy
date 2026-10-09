@@ -24,7 +24,7 @@ export function TribePage() {
   const { memberId: memberIdParam } = useParams<{ memberId?: string }>()
   const { user } = useAuth()
   const { activeLeague, loading: leagueLoading } = useActiveLeague()
-  const week = useLeagueWeek(activeLeague)
+  const week = useLeagueWeek(activeLeague, 'tribe')
 
   const tribesQuery = useQuery({
     queryKey: ['tribes', activeLeague?.season_id],

@@ -13,7 +13,7 @@ import { RankDelta } from '@/features/standings/RankDelta'
 
 export function LeagueHomePage() {
   const { activeLeague, loading: leagueLoading, error: leagueError } = useActiveLeague()
-  const week = useLeagueWeek(activeLeague)
+  const week = useLeagueWeek(activeLeague, 'home')
 
   if (leagueLoading || (activeLeague && week.loading)) {
     return (

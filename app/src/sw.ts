@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import { clientsClaim } from 'workbox-core'
-import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
-import { registerRoute } from 'workbox-routing'
+import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
+import { NavigationRoute, registerRoute } from 'workbox-routing'
 import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies'
 import { parsePushPayload, resolveSameOriginUrl } from '@/domain/push-payload'
 
@@ -19,14 +19,21 @@ self.addEventListener('message', (event) => {
   }
 })
 
-registerRoute(
-  ({ request, url }) =>
-    request.mode === 'navigate' && url.origin === self.location.origin,
-  new NetworkFirst({
-    cacheName: 'sfl-pages',
-    networkTimeoutSeconds: 4,
-  }),
-)
+// Serve the precached shell for navigations. A network-first wait used to hold
+// the service worker open on cold start and could fail the document request
+// before any league reads began. Dev builds have no precache manifest yet.
+try {
+  registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')))
+} catch {
+  registerRoute(
+    ({ request, url }) =>
+      request.mode === 'navigate' && url.origin === self.location.origin,
+    new NetworkFirst({
+      cacheName: 'sfl-pages',
+      networkTimeoutSeconds: 4,
+    }),
+  )
+}
 
 registerRoute(
   ({ request, url }) =>

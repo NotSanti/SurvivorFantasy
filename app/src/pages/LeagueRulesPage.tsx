@@ -18,7 +18,7 @@ function displayRuleLabel(code: string, label: string) {
 
 export function LeagueRulesPage() {
   const { activeLeague, loading: leagueLoading } = useActiveLeague()
-  const week = useLeagueWeek(activeLeague)
+  const week = useLeagueWeek(activeLeague, 'rules')
 
   if (leagueLoading || (activeLeague && week.loading)) {
     return (

@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { requireSupabaseEnv } from '@/domain/env'
 import { readViteEnv } from '@/lib/client-env'
+import { createLimitedFetch } from '@/lib/limited-fetch'
 import type { Database } from '@/types/database'
 
 let client: SupabaseClient<Database> | null = null
@@ -14,6 +15,9 @@ export function getSupabaseClient(): SupabaseClient<Database> {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+    },
+    global: {
+      fetch: createLimitedFetch(),
     },
   })
   return client

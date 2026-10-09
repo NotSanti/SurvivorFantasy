@@ -14,7 +14,7 @@ export function EpisodeDetailPage() {
   const episodeNumber = Number(raw)
   const { user } = useAuth()
   const { activeLeague, loading: leagueLoading } = useActiveLeague()
-  const week = useLeagueWeek(activeLeague)
+  const week = useLeagueWeek(activeLeague, 'episode')
 
   if (leagueLoading || (activeLeague && week.loading)) {
     return (

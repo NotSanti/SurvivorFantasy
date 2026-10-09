@@ -13,17 +13,39 @@ function awaitingInitial(query: Pick<UseQueryResult, 'isLoading'>) {
   return query.isLoading
 }
 
-export function useLeagueWeek(league: ActiveLeague | null) {
+/**
+ * Each screen asks only for the reads it renders. Opening Tribe used to fire
+ * standings, scores, and rules at the same time; installed PWAs then left the
+ * extra calls pending, and every screen except Tribe waited on all of them.
+ */
+export const LEAGUE_WEEK_VIEWS = {
+  tribe: ['roster', 'mvp', 'lineScores', 'castaways', 'rules'],
+  standings: ['members', 'episodeScores', 'episodes', 'published'],
+  home: ['members', 'episodeScores', 'episodes', 'published'],
+  rules: ['rules'],
+  episode: ['lineScores', 'episodeScores', 'episodes', 'castaways'],
+  merge: ['roster', 'castaways', 'rules'],
+} as const
+
+export type LeagueWeekView = keyof typeof LEAGUE_WEEK_VIEWS
+export type LeagueWeekPart = (typeof LEAGUE_WEEK_VIEWS)[LeagueWeekView][number]
+
+export function leagueWeekIncludes(view: LeagueWeekView, part: LeagueWeekPart) {
+  return (LEAGUE_WEEK_VIEWS[view] as readonly LeagueWeekPart[]).includes(part)
+}
+
+export function useLeagueWeek(league: ActiveLeague | null, view: LeagueWeekView) {
   const { user } = useAuth()
   const leagueId = league?.id
   const seasonId = league?.season_id
+  const needs = (part: LeagueWeekPart) => leagueWeekIncludes(view, part)
   const canQuery = Boolean(user && leagueId)
   const canQuerySeason = Boolean(user && seasonId)
 
   const membersQuery = useQuery({
     queryKey: ['league-members', leagueId],
-    enabled: canQuery,
-    queryFn: async () => {
+    enabled: canQuery && needs('members'),
+    queryFn: async ({ signal }) => {
       await ensureAuthSession()
       const supabase = getSupabaseClient()
       const { data: members, error } = await supabase
@@ -31,12 +53,14 @@ export function useLeagueWeek(league: ActiveLeague | null) {
         .select('user_id, role, status, fantasy_tribe_name, fantasy_tribe_color')
         .eq('league_id', leagueId!)
         .eq('status', 'active')
+        .abortSignal(signal)
       if (error) throw error
       const ids = members.map((member) => member.user_id)
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select('id, display_name')
         .in('id', ids)
+        .abortSignal(signal)
       if (profileError) throw profileError
       return members.map((member) => {
         const profileName =
@@ -54,13 +78,14 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const episodeScoresQuery = useQuery({
     queryKey: ['member-episode-scores', leagueId],
-    enabled: canQuery,
-    queryFn: async () => {
+    enabled: canQuery && needs('episodeScores'),
+    queryFn: async ({ signal }) => {
       await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('member_episode_scores')
         .select('league_id, member_id, episode_id, episode_number, points')
         .eq('league_id', leagueId!)
+        .abortSignal(signal)
       if (error) throw error
       return data
     },
@@ -68,8 +93,8 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const lineScoresQuery = useQuery({
     queryKey: ['member-episode-castaway-scores', leagueId],
-    enabled: canQuery,
-    queryFn: async () => {
+    enabled: canQuery && needs('lineScores'),
+    queryFn: async ({ signal }) => {
       await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('member_episode_castaway_scores')
@@ -77,6 +102,7 @@ export function useLeagueWeek(league: ActiveLeague | null) {
           'league_id, member_id, roster_entry_id, castaway_id, acquisition_type, starts_episode, ends_episode, episode_id, episode_number, points_total, revision, published_at, is_mvp_bonus',
         )
         .eq('league_id', leagueId!)
+        .abortSignal(signal)
       if (error) throw error
       return data
     },
@@ -84,14 +110,15 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const episodesQuery = useQuery({
     queryKey: ['episodes', seasonId],
-    enabled: canQuerySeason,
-    queryFn: async () => {
+    enabled: canQuerySeason && needs('episodes'),
+    queryFn: async ({ signal }) => {
       await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('episodes')
         .select('id, episode_number, status, published_score_revision, phase')
         .eq('season_id', seasonId!)
         .order('episode_number')
+        .abortSignal(signal)
       if (error) throw error
       return data
     },
@@ -99,14 +126,15 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const publishedQuery = useQuery({
     queryKey: ['published-scores', seasonId],
-    enabled: canQuerySeason,
+    enabled: canQuerySeason && needs('published'),
     staleTime: 0,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('published_castaway_episode_scores')
         .select('episode_number, published_at, revision, points_total, castaway_id')
         .eq('season_id', seasonId!)
+        .abortSignal(signal)
       if (error) throw error
       return data
     },
@@ -114,8 +142,8 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const rosterQuery = useQuery({
     queryKey: ['roster', leagueId],
-    enabled: canQuery,
-    queryFn: async () => {
+    enabled: canQuery && needs('roster'),
+    queryFn: async ({ signal }) => {
       await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('roster_entries')
@@ -139,6 +167,7 @@ export function useLeagueWeek(league: ActiveLeague | null) {
         )
         .eq('league_id', leagueId!)
         .order('slot_number')
+        .abortSignal(signal)
       if (error) throw error
       return data
     },
@@ -146,13 +175,14 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const mvpQuery = useQuery({
     queryKey: ['mvp', leagueId],
-    enabled: canQuery,
-    queryFn: async () => {
+    enabled: canQuery && needs('mvp'),
+    queryFn: async ({ signal }) => {
       await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('mvp_selections')
         .select('member_id, castaway_id')
         .eq('league_id', leagueId!)
+        .abortSignal(signal)
       if (error) throw error
       return data
     },
@@ -160,14 +190,15 @@ export function useLeagueWeek(league: ActiveLeague | null) {
 
   const castawaysQuery = useQuery({
     queryKey: ['castaways', seasonId],
-    enabled: canQuerySeason,
-    queryFn: async () => {
+    enabled: canQuerySeason && needs('castaways'),
+    queryFn: async ({ signal }) => {
       await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('castaways')
         .select('id, display_name, status, final_placement, eliminated_episode_number, photo_url, original_tribe_id')
         .eq('season_id', seasonId!)
         .order('display_name')
+        .abortSignal(signal)
       if (error) throw error
       return data
     },
@@ -176,8 +207,8 @@ export function useLeagueWeek(league: ActiveLeague | null) {
   const hasRuleSet = Boolean(league?.ruleset_version_id)
   const ruleSetQuery = useQuery({
     queryKey: ['rule-set-for-league', leagueId],
-    enabled: canQuery && hasRuleSet,
-    queryFn: async () => {
+    enabled: canQuery && hasRuleSet && needs('rules'),
+    queryFn: async ({ signal }) => {
       await ensureAuthSession()
       const { data, error } = await getSupabaseClient()
         .from('rule_sets')
@@ -185,6 +216,7 @@ export function useLeagueWeek(league: ActiveLeague | null) {
           'id, version, status, pending_confirmation, source_url, roster_size, wildcard_slots, first_scored_episode, scoring_rules(code, label, points, kind, phase, sort_order)',
         )
         .eq('id', league!.ruleset_version_id)
+        .abortSignal(signal)
         .maybeSingle()
       if (error) throw error
       return data
@@ -271,17 +303,17 @@ export function useLeagueWeek(league: ActiveLeague | null) {
   // isLoading (pending+fetching) only — networkMode:'always' avoids the old
   // paused-empty "Waiting on scores" flash without locking on invalidation gaps.
   const loading =
-    Boolean(league && canQuery) &&
-    (awaitingInitial(membersQuery) ||
-      awaitingInitial(episodeScoresQuery) ||
-      awaitingInitial(lineScoresQuery) ||
-      awaitingInitial(episodesQuery) ||
-      awaitingInitial(publishedQuery) ||
-      awaitingInitial(rosterQuery) ||
-      awaitingInitial(mvpQuery) ||
-      awaitingInitial(castawaysQuery) ||
-      (hasRuleSet && awaitingInitial(ruleSetQuery)))
-  /** Tribe page only needs roster + castaway identity, not standings/scores. */
+    Boolean(league && (canQuery || canQuerySeason)) &&
+    ((needs('members') && awaitingInitial(membersQuery)) ||
+      (needs('episodeScores') && awaitingInitial(episodeScoresQuery)) ||
+      (needs('lineScores') && awaitingInitial(lineScoresQuery)) ||
+      (needs('episodes') && awaitingInitial(episodesQuery)) ||
+      (needs('published') && awaitingInitial(publishedQuery)) ||
+      (needs('roster') && awaitingInitial(rosterQuery)) ||
+      (needs('mvp') && awaitingInitial(mvpQuery)) ||
+      (needs('castaways') && awaitingInitial(castawaysQuery)) ||
+      (needs('rules') && hasRuleSet && awaitingInitial(ruleSetQuery)))
+  /** Tribe paints from roster, castaway identity, MVP, and line scores. */
   const tribeLoading =
     Boolean(league && canQuery) &&
     (awaitingInitial(rosterQuery) ||
@@ -289,24 +321,25 @@ export function useLeagueWeek(league: ActiveLeague | null) {
       awaitingInitial(mvpQuery) ||
       awaitingInitial(lineScoresQuery))
   const fetching =
-    membersQuery.isFetching ||
-    episodeScoresQuery.isFetching ||
-    lineScoresQuery.isFetching ||
-    publishedQuery.isFetching ||
-    rosterQuery.isFetching ||
-    mvpQuery.isFetching ||
-    castawaysQuery.isFetching ||
-    ruleSetQuery.isFetching
+    (needs('members') && membersQuery.isFetching) ||
+    (needs('episodeScores') && episodeScoresQuery.isFetching) ||
+    (needs('lineScores') && lineScoresQuery.isFetching) ||
+    (needs('episodes') && episodesQuery.isFetching) ||
+    (needs('published') && publishedQuery.isFetching) ||
+    (needs('roster') && rosterQuery.isFetching) ||
+    (needs('mvp') && mvpQuery.isFetching) ||
+    (needs('castaways') && castawaysQuery.isFetching) ||
+    (needs('rules') && ruleSetQuery.isFetching)
   const error =
-    membersQuery.error ??
-    episodeScoresQuery.error ??
-    lineScoresQuery.error ??
-    episodesQuery.error ??
-    publishedQuery.error ??
-    rosterQuery.error ??
-    mvpQuery.error ??
-    castawaysQuery.error ??
-    ruleSetQuery.error
+    (needs('members') ? membersQuery.error : null) ??
+    (needs('episodeScores') ? episodeScoresQuery.error : null) ??
+    (needs('lineScores') ? lineScoresQuery.error : null) ??
+    (needs('episodes') ? episodesQuery.error : null) ??
+    (needs('published') ? publishedQuery.error : null) ??
+    (needs('roster') ? rosterQuery.error : null) ??
+    (needs('mvp') ? mvpQuery.error : null) ??
+    (needs('castaways') ? castawaysQuery.error : null) ??
+    (needs('rules') ? ruleSetQuery.error : null)
 
   return {
     members: membersQuery.data ?? [],
@@ -333,15 +366,15 @@ export function useLeagueWeek(league: ActiveLeague | null) {
     fetching,
     error: error instanceof Error ? error : error ? new Error('Could not load league week') : null,
     refetch: () => {
-      void membersQuery.refetch()
-      void episodeScoresQuery.refetch()
-      void lineScoresQuery.refetch()
-      void episodesQuery.refetch()
-      void publishedQuery.refetch()
-      void rosterQuery.refetch()
-      void mvpQuery.refetch()
-      void castawaysQuery.refetch()
-      void ruleSetQuery.refetch()
+      if (needs('members')) void membersQuery.refetch()
+      if (needs('episodeScores')) void episodeScoresQuery.refetch()
+      if (needs('lineScores')) void lineScoresQuery.refetch()
+      if (needs('episodes')) void episodesQuery.refetch()
+      if (needs('published')) void publishedQuery.refetch()
+      if (needs('roster')) void rosterQuery.refetch()
+      if (needs('mvp')) void mvpQuery.refetch()
+      if (needs('castaways')) void castawaysQuery.refetch()
+      if (needs('rules')) void ruleSetQuery.refetch()
     },
   }
 }

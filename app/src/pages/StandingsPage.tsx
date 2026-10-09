@@ -16,7 +16,7 @@ import { useAuth } from '@/features/auth/use-auth'
 export function StandingsPage() {
   const { user } = useAuth()
   const { activeLeague, loading: leagueLoading } = useActiveLeague()
-  const week = useLeagueWeek(activeLeague)
+  const week = useLeagueWeek(activeLeague, 'standings')
 
   if (leagueLoading || (activeLeague && week.loading)) {
     return (

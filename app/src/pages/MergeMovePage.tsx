@@ -20,7 +20,7 @@ export function MergeMovePage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const { activeLeague, loading: leagueLoading } = useActiveLeague()
-  const week = useLeagueWeek(activeLeague)
+  const week = useLeagueWeek(activeLeague, 'merge')
   const [incomingId, setIncomingId] = useState<string | null>(null)
   const [outgoingId, setOutgoingId] = useState<string | null>(null)
 
