@@ -56,12 +56,7 @@ export function StandingsPage() {
           Latest published totals include a correction.
         </p>
       ) : null}
-      {!week.hasPublishedScores ? (
-        <EmptyState
-          title="No scores published"
-          description="League standings appear after the first scored episode is imported."
-        />
-      ) : (
+      {week.hasPublishedScores ? (
         <ol className="space-y-2">
           {week.standings.map((row) => {
             const tribeColor = fantasyTribeColorSwatch(
@@ -113,6 +108,11 @@ export function StandingsPage() {
             )
           })}
         </ol>
+      ) : week.error ? null : (
+        <EmptyState
+          title="No scores published"
+          description="League standings appear after the first scored episode is imported."
+        />
       )}
       {week.latestEpisode ? (
         <Link

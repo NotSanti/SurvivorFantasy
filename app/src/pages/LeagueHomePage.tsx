@@ -64,7 +64,7 @@ export function LeagueHomePage() {
       {week.latestCorrected ? (
         <p className="rounded-xl bg-muted px-3 py-2 text-sm">A published total was corrected.</p>
       ) : null}
-      {week.nextAction ? (
+      {week.nextAction && !(week.error && !week.hasPublishedScores) ? (
         <section className="space-y-2 rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10">
           <h2 className="font-medium">{week.nextAction.title}</h2>
           <p className="text-sm text-muted-foreground">{week.nextAction.description}</p>
@@ -116,7 +116,7 @@ export function LeagueHomePage() {
             </li>
           ))}
         </ul>
-      ) : (
+      ) : week.error ? null : (
         <EmptyState
           title="No scores published"
           description="Episode recaps show up here after Global totals are imported."

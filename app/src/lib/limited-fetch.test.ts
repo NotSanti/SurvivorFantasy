@@ -63,6 +63,42 @@ describe('createLimitedFetch', () => {
     }
   })
 
+  it('asks for the limit again so an installed app can run fewer at once', async () => {
+    const gate = deferred()
+    let started = 0
+    const base = vi.fn(() => {
+      started += 1
+      return gate.promise
+    })
+    const fetch = createLimitedFetch({
+      limit: () => 1,
+      timeoutMs: 5_000,
+      base,
+    })
+
+    const first = fetch('/a')
+    const second = fetch('/b')
+    await Promise.resolve()
+    expect(started).toBe(1)
+
+    gate.resolve(new Response('ok'))
+    await Promise.all([first, second])
+    expect(started).toBe(2)
+  })
+
+  it('leaves the cache mode unset when the caller asks', async () => {
+    const base = vi.fn(() => Promise.resolve(new Response('ok')))
+    const fetch = createLimitedFetch({
+      limit: 1,
+      timeoutMs: 5_000,
+      base,
+      cache: () => undefined,
+    })
+    await fetch('/scores', { cache: 'no-store' })
+    const init = base.mock.calls[0]?.[1] as RequestInit
+    expect(init.cache).toBeUndefined()
+  })
+
   it('does not start a queued request after the caller aborts', async () => {
     const gate = deferred()
     const base = vi.fn(() => gate.promise)
