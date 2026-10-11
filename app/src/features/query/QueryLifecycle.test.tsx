@@ -1,7 +1,10 @@
 import { QueryClient, QueryObserver } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import { awaitingInitial } from '@/features/league/use-league-week'
-import { isUnsentInitialQuery, recoverUnsentQueries } from '@/features/query/QueryLifecycle'
+import {
+  isUnsentInitialQuery,
+  recoverUnsentQueries,
+} from '@/features/query/recover-unsent-queries'
 
 describe('awaitingInitial', () => {
   it('stays loading when an enabled read has not succeeded', () => {
