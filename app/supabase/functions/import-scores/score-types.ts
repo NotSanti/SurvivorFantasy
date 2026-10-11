@@ -1,4 +1,4 @@
-export const SCORE_PARSER_VERSION = 'scores-v1'
+export const SCORE_PARSER_VERSION = 'scores-v2'
 
 export type ParsedScore = {
   sourceName: string
@@ -17,6 +17,7 @@ export type ParseFailureCode =
   | 'missing_results'
   | 'malformed_alt'
   | 'duplicate_names'
+  | 'duplicate_episode'
   | 'empty_episode'
 
 export type ParseSuccess = {

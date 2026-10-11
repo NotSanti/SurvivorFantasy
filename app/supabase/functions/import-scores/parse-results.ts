@@ -28,6 +28,15 @@ function headingNumber(el: Element): number | null {
   return Number.isInteger(episode) && episode > 0 ? episode : null
 }
 
+function innermostHeading(el: Element): number | null {
+  const episode = headingNumber(el)
+  if (episode == null) return null
+  for (const child of el.querySelectorAll('*')) {
+    if (headingNumber(child) != null) return null
+  }
+  return episode
+}
+
 export function parseAltScores(
   alt: string,
 ): { ok: true; scores: ParsedScore[] } | { ok: false; code: 'malformed_alt' | 'duplicate_names' | 'empty_episode'; detail: string } {
@@ -74,11 +83,8 @@ export async function parseResultsHtml(html: string): Promise<ParseResult> {
   const episodes: ParsedEpisode[] = []
   let pending: number | null = null
   for (const el of walkAfter(results)) {
-    const heading = headingNumber(el)
-    if (heading != null) {
-      pending = heading
-      continue
-    }
+    const heading = innermostHeading(el)
+    if (heading != null) pending = heading
     if (el.tagName !== 'IMG' || pending == null) continue
     const alt = el.getAttribute('alt') ?? ''
     const parsed = parseAltScores(alt)
@@ -90,6 +96,18 @@ export async function parseResultsHtml(html: string): Promise<ParseResult> {
       scores: parsed.scores,
     })
     pending = null
+  }
+
+  const seenEpisodes = new Set<number>()
+  for (const episode of episodes) {
+    if (seenEpisodes.has(episode.episodeNumber)) {
+      return {
+        ok: false,
+        code: 'duplicate_episode',
+        detail: `Episode ${episode.episodeNumber} was listed more than once.`,
+      }
+    }
+    seenEpisodes.add(episode.episodeNumber)
   }
 
   if (episodes.length === 0) {

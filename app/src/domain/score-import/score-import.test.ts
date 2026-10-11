@@ -64,6 +64,24 @@ describe('parseResultsHtml', () => {
     expect(empty.ok).toBe(false)
   })
 
+  it('keeps an image with the heading that precedes it when the next heading shares its paragraph', async () => {
+    const published = `<h2 id="results"><strong>Results</strong></h2>
+      <p><strong>EPISODE 3 POINTS:</strong></p>
+      <p><a href="https://assets.globaltv.com/wp-content/uploads/2026/10/survivor-51-episode-3-points.jpg"><img src="https://assets.globaltv.com/wp-content/uploads/2026/10/survivor-51-episode-3-points.jpg" alt="Alexis total points: 11; An total points: 1;"></a><br>
+      <strong>EPISODE 2 POINTS:</strong></p>
+      <p><a href="https://assets.globaltv.com/wp-content/uploads/2026/10/survivor-51-episode-2-points_v2.jpg"><img src="https://assets.globaltv.com/wp-content/uploads/2026/10/survivor-51-episode-2-points_v2.jpg" alt="Alexis total points: 1; An total points: 11;"></a></p>`
+    const result = await parseResultsHtml(published)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.episodes.map((episode) => episode.episodeNumber)).toEqual([3, 2])
+    expect(result.episodes[0].imageUrl).toContain('episode-3-points')
+    expect(result.episodes[0].scores).toEqual([
+      { sourceName: 'Alexis', points: 11 },
+      { sourceName: 'An', points: 1 },
+    ])
+    expect(result.episodes[1].scores[0]).toEqual({ sourceName: 'Alexis', points: 1 })
+  })
+
   it('parses Season 51 totals from an image nested after a leading div', async () => {
     const published = `<div align="center"><p>Jump to the results.</p></div>
       <h2 id="results"><strong>Results</strong></h2>

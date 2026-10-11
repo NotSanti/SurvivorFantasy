@@ -112,6 +112,43 @@ describe('parseRulesHtml', () => {
     expect(result.code).toBe('empty_content')
   })
 
+  it('keeps Season 51 quotas when episode 3 results share a paragraph with the episode 2 heading', async () => {
+    const withEpisode3 = season51Fragment.replace(
+      '<p><strong>EPISODE 2 POINTS:</strong></p>',
+      `<p><strong>EPISODE 3 POINTS:</strong></p>
+      <p><a href="https://assets.globaltv.com/wp-content/uploads/2026/10/survivor-51-episode-3-points.jpg"><img alt="Alexis total points: 11; An total points: 1;" src="https://assets.globaltv.com/wp-content/uploads/2026/10/survivor-51-episode-3-points.jpg"></a><br><strong>EPISODE 2 POINTS:</strong></p>`,
+    )
+    const result = await parseRulesHtml(withEpisode3)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.proposed.firstScoredEpisode).toBe(2)
+    expect(result.proposed.rosterSize).toBe(8)
+  })
+
+  it('reads the picks-per-tribe formula when the spelled-out quota is missing', async () => {
+    const formulaOnly = `<article>
+      <p>You should have eight picks in total (4 picks/tribe x 2).</p>
+      <p>Points begin to accumulate starting with episode 2.</p>
+      <ul>
+        <li>Score 1 point per castaway for each week they survive prior to the merge</li>
+        <li>Score 3 points per castaway for each week they survive post-merge</li>
+        <li>Score 10 bonus points if any of your picks comes in 3rd place</li>
+        <li>Score 20 bonus points if any of your picks comes in 2nd place</li>
+        <li>Score 30 bonus points if any of your picks wins the game</li>
+        <li>Score 30 bonus points if your MVP wins the game</li>
+      </ul>
+    </article>`
+    const result = await parseRulesHtml(formulaOnly)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.proposed.picksPerOriginalTribe).toEqual({
+      per_tribe: 4,
+      tribe_count: 2,
+      manual_distribution: [4, 4],
+    })
+    expect(result.proposed.firstScoredEpisode).toBe(2)
+  })
+
   it('parses the published Season 51 page, including sibling blocks after the first div', async () => {
     const result = await parseRulesHtml(season51Fragment)
     expect(result.ok).toBe(true)

@@ -81,10 +81,19 @@ function parseScoringItems(document: Document): {
 const COUNT = String.raw`(\d+|one|two|three|four|five|six|seven|eight|nine|ten)`
 
 function sourceText(document: Document): string {
-  const fragment = [...document.childNodes].map((node) => node.textContent ?? '').join('\n')
-  return normalizeForMatch(
-    fragment.trim() || document.body?.textContent || document.documentElement?.textContent || '',
-  )
+  const stop = document.getElementById('results')
+  const parts: string[] = []
+  const visit = (node: Node | null): boolean => {
+    while (node) {
+      if (node === stop) return true
+      if (node.nodeType === 3) parts.push(node.textContent ?? '')
+      else if (node.nodeType === 1 && visit(node.firstChild)) return true
+      node = node.nextSibling
+    }
+    return false
+  }
+  visit(document.firstChild)
+  return normalizeForMatch(parts.join(' ').trim() || document.documentElement?.textContent || '')
 }
 
 const NUMBER_WORDS: Record<string, number> = {
@@ -115,20 +124,27 @@ function parseQuotas(document: Document): Pick<
   )
   const eachTribe = body.match(new RegExp(`${COUNT}\\s+castaways from each tribe\\b`))
   const namedTribes = body.match(new RegExp(`\\b${COUNT}\\s+tribes\\b`))
+  const picksFormula = body.match(/(\d+)\s+picks\/tribe\s+x\s+(\d+)/)
   const firstEpisode =
-    body.match(/points begin[^.]*episode\s+(\d+)/) ?? body.match(/episode\s+(\d+)\b/)
+    body.match(/points begin[^.]*episode\s+(\d+)/) ??
+    body.match(/starting with episode\s+(\d+)/) ??
+    body.match(/episode\s+(\d+)\b/)
   if (!firstEpisode) return null
 
   const perTribe = classic
     ? parseCount(classic[1])
     : eachTribe
       ? parseCount(eachTribe[1])
-      : null
+      : picksFormula
+        ? parseCount(picksFormula[1])
+        : null
   const tribeCount = classic
     ? parseCount(classic[2])
     : namedTribes
       ? parseCount(namedTribes[1])
-      : null
+      : picksFormula
+        ? parseCount(picksFormula[2])
+        : null
   const firstScoredEpisode = Number(firstEpisode[1])
   if (
     perTribe == null ||
@@ -166,7 +182,7 @@ export async function parseRulesHtml(html: string): Promise<ParseResult> {
     return { ok: false, code: 'malformed_html', detail: 'HTML could not be parsed.' }
   }
 
-  if (!document.body && !document.documentElement) {
+  if (!document.documentElement && !document.firstChild) {
     return { ok: false, code: 'malformed_html', detail: 'HTML did not contain a usable document.' }
   }
 
