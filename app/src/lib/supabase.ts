@@ -27,6 +27,11 @@ export function getSupabaseClient(): SupabaseClient<Database> {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      // navigator.locks is not re-entrant. In an installed PWA, getSession holds
+      // the lock and a nested token read waits forever. Blurring the window is
+      // what used to release it, so standings and rules never left the device
+      // until then. Auth steps for this tab run inline instead.
+      lock: async (_name, _acquireTimeout, fn) => fn(),
     },
     global: {
       // Installed iOS apps drop or hang fetches that start together, and

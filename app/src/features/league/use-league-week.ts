@@ -15,9 +15,17 @@ import { ensureAuthSession } from '@/lib/ensure-auth-session'
 import { firstRelated } from '@/domain/fantasy-tribe/avatar'
 import { getSupabaseClient } from '@/lib/supabase'
 
-/** First fetch in flight. Avoid isPending alone — invalidation gaps look "pending" forever. */
-function awaitingInitial(query: Pick<UseQueryResult, 'isLoading'>) {
-  return query.isLoading
+/**
+ * No successful payload yet. isLoading is false when a read was cancelled
+ * before it was sent (pending, idle), and Standings then paints "no scores".
+ * Disabled queries are also pending, so the caller passes its enabled flag.
+ * A refetch of data we already have stays isPending false.
+ */
+export function awaitingInitial(
+  query: Pick<UseQueryResult, 'isPending'>,
+  enabled: boolean,
+) {
+  return enabled && query.isPending
 }
 
 /**
@@ -339,26 +347,24 @@ export function useLeagueWeek(
       (row) => row.episode_number === latestEpisode && (row.revision ?? 1) > 1,
     )
 
-  // isLoading (pending+fetching) only — networkMode:'always' avoids the old
-  // paused-empty "Waiting on scores" flash without locking on invalidation gaps.
   const loading =
     Boolean(league && (canQuery || canQuerySeason)) &&
-    ((needs('members') && awaitingInitial(membersQuery)) ||
-      (needs('episodeScores') && awaitingInitial(episodeScoresQuery)) ||
-      (needs('lineScores') && awaitingInitial(lineScoresQuery)) ||
-      (needs('episodes') && awaitingInitial(episodesQuery)) ||
-      (needs('published') && awaitingInitial(publishedQuery)) ||
-      (needs('roster') && awaitingInitial(rosterQuery)) ||
-      (needs('mvp') && awaitingInitial(mvpQuery)) ||
-      (needs('castaways') && awaitingInitial(castawaysQuery)) ||
-      (needs('rules') && hasRuleSet && awaitingInitial(ruleSetQuery)))
+    (awaitingInitial(membersQuery, canQuery && needs('members')) ||
+      awaitingInitial(episodeScoresQuery, canQuery && needs('episodeScores')) ||
+      awaitingInitial(lineScoresQuery, canQuery && needs('lineScores')) ||
+      awaitingInitial(episodesQuery, canQuerySeason && needs('episodes')) ||
+      awaitingInitial(publishedQuery, canQuerySeason && needs('published')) ||
+      awaitingInitial(rosterQuery, canQuery && needs('roster')) ||
+      awaitingInitial(mvpQuery, canQuery && needs('mvp')) ||
+      awaitingInitial(castawaysQuery, canQuerySeason && needs('castaways')) ||
+      awaitingInitial(ruleSetQuery, canQuery && hasRuleSet && needs('rules')))
   /** Tribe paints from roster, castaway identity, MVP, and line scores. */
   const tribeLoading =
     Boolean(league && canQuery) &&
-    (awaitingInitial(rosterQuery) ||
-      awaitingInitial(castawaysQuery) ||
-      awaitingInitial(mvpQuery) ||
-      awaitingInitial(lineScoresQuery))
+    (awaitingInitial(rosterQuery, canQuery && needs('roster')) ||
+      awaitingInitial(castawaysQuery, canQuerySeason && needs('castaways')) ||
+      awaitingInitial(mvpQuery, canQuery && needs('mvp')) ||
+      awaitingInitial(lineScoresQuery, canQuery && needs('lineScores')))
   const fetching =
     (needs('members') && membersQuery.isFetching) ||
     (needs('episodeScores') && episodeScoresQuery.isFetching) ||
