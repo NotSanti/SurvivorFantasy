@@ -13,6 +13,8 @@ type CastawayPickCardProps = {
   tribe?: TribeChip | null
   selected?: boolean
   disabled?: boolean
+  /** Visual muted/opacity style without blocking clicks (e.g. eliminated on Tribe). */
+  dimmed?: boolean
   /** When true, render a non-interactive pill (tribe / roster views). */
   static?: boolean
   /** Prefer immediate image fetch (above-the-fold tribe roster). */
@@ -40,6 +42,7 @@ export function CastawayPickCard({
   tribe = null,
   selected = false,
   disabled = false,
+  dimmed = false,
   static: isStatic = false,
   eager = false,
   badge,
@@ -48,12 +51,13 @@ export function CastawayPickCard({
 }: CastawayPickCardProps) {
   const initial = name.trim().charAt(0).toUpperCase() || '?'
   const tribeLabel = tribe?.name ?? null
+  const lookMuted = disabled || dimmed
   const className = cn(
     'flex min-h-11 w-full items-center gap-3 rounded-full border py-1 pr-4 pl-1 text-left transition-colors',
     'border-border bg-card/60',
     !isStatic && 'hover:border-ember/60 hover:bg-card',
     selected && 'border-ember bg-ember/15 ring-1 ring-ember/40',
-    disabled && 'opacity-55',
+    lookMuted && 'opacity-55',
     disabled && !isStatic && 'cursor-not-allowed hover:border-border hover:bg-card/60',
   )
 
@@ -79,7 +83,7 @@ export function CastawayPickCard({
         <span
           className={cn(
             'block truncate font-display text-lg leading-tight font-semibold',
-            disabled ? 'text-muted-foreground' : 'text-ember',
+            lookMuted ? 'text-muted-foreground' : 'text-ember',
           )}
         >
           {name}

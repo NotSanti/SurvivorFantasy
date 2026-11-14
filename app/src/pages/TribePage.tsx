@@ -229,6 +229,7 @@ export function TribePage() {
                     photoUrl={castaway?.photo_url}
                     tribe={tribeOf(castaway)}
                     selected={isMvp}
+                    dimmed={eliminated}
                     badge={eliminated ? <span aria-label="Eliminated">💀</span> : null}
                     trailing={scoreTrailing(points)}
                     eager
@@ -254,6 +255,7 @@ export function TribePage() {
                     name={castaway?.display_name ?? 'Castaway'}
                     photoUrl={castaway?.photo_url}
                     tribe={tribeOf(castaway)}
+                    dimmed
                     badge={
                       eliminated ? (
                         <span aria-label="Eliminated">💀</span>
