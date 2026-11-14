@@ -212,7 +212,9 @@ export function AdminBreakdownReview() {
         p_episode_number: Number(episodeNumber),
         p_events: events,
       })
-      if (error) throw error
+      if (error) {
+        throw new Error(error.message || error.code || 'publish_score_events failed')
+      }
       return data
     },
     onSuccess: () => {

@@ -291,13 +291,30 @@ export function resolveBreakdownCsv(input: {
       total_mismatch: false,
     }
 
-    current.lines.push({
-      rule_code: matched?.code ?? row.ruleCode,
-      label: matched?.label ?? row.label,
-      source_label: row.label,
-      points: row.points,
-      occurrences: row.occurrences,
-    })
+    const ruleCode = matched?.code ?? row.ruleCode
+    const existing =
+      ruleCode != null
+        ? current.lines.findIndex((line) => line.rule_code === ruleCode)
+        : -1
+    if (existing >= 0) {
+      const prior = current.lines[existing]!
+      current.lines[existing] = {
+        ...prior,
+        points: prior.points + row.points,
+        occurrences: prior.occurrences + row.occurrences,
+        source_label: prior.source_label
+          ? `${prior.source_label}; ${row.label}`
+          : row.label,
+      }
+    } else {
+      current.lines.push({
+        rule_code: ruleCode,
+        label: matched?.label ?? row.label,
+        source_label: row.label,
+        points: row.points,
+        occurrences: row.occurrences,
+      })
+    }
     current.line_sum = current.lines.reduce((sum, line) => sum + line.points, 0)
     current.total_mismatch =
       importedTotals != null &&

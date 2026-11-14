@@ -20,5 +20,11 @@ describe('matchBreakdownLabel', () => {
     )
     expect(matchBreakdownLabel('Won Group Reward', 5)?.code).toBe('wc_group_reward')
     expect(matchBreakdownLabel('Won Individual Immunity', 15)?.code).toBe('wc_individual_immunity')
+    expect(matchBreakdownLabel('Played an Advantage at Tribal', 5)?.code).toBe(
+      'wc_use_advantage_tribal',
+    )
+    expect(matchBreakdownLabel('Got an Advantage', 5)?.code).toBe('wc_game_advantage')
+    expect(matchBreakdownLabel('Created a Fake Idol', 15)?.code).toBe('wc_create_fake_idol')
+    expect(matchBreakdownLabel('Torch Snuffed Due to Blindside', 10)?.code).toBe('wc_blindside')
   })
 })
