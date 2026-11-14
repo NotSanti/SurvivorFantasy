@@ -1,10 +1,12 @@
 import { Link, Navigate, useParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
 import { LoadingState } from '@/components/states/LoadingState'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { CastawayPickCard } from '@/features/draft/CastawayPickCard'
+import { CastawayPointsBreakdownDialog } from '@/features/league/CastawayPointsBreakdownDialog'
 import { FantasyTribeHeader } from '@/features/league/FantasyTribeHeader'
 import { NoActiveLeague } from '@/features/league/NoActiveLeague'
 import { useActiveLeague } from '@/features/league/use-active-league'
@@ -25,6 +27,7 @@ export function TribePage() {
   const { user } = useAuth()
   const { activeLeague, loading: leagueLoading } = useActiveLeague()
   const week = useLeagueWeek(activeLeague, 'tribe')
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null)
 
   const tribesQuery = useQuery({
     queryKey: ['tribes', activeLeague?.season_id],
@@ -141,6 +144,13 @@ export function TribePage() {
     </span>
   )
 
+  const selectedEntry =
+    memberRoster.find((entry) => entry.id === selectedEntryId) ?? null
+  const selectedCastaway = selectedEntry ? castawayOf(selectedEntry) : undefined
+  const selectedPoints = selectedEntry
+    ? pointsForEntry(selectedEntry.id, selectedEntry.castaway_id)
+    : 0
+
   if (!memberInLeague) {
     return (
       <PageContainer>
@@ -215,19 +225,14 @@ export function TribePage() {
               return (
                 <li key={entry.id}>
                   <CastawayPickCard
-                    static
                     name={castaway?.display_name ?? 'Castaway'}
                     photoUrl={castaway?.photo_url}
                     tribe={tribeOf(castaway)}
                     selected={isMvp}
-                    disabled={eliminated}
-                    badge={
-                      eliminated ? (
-                        <span aria-label="Eliminated">💀</span>
-                      ) : null
-                    }
+                    badge={eliminated ? <span aria-label="Eliminated">💀</span> : null}
                     trailing={scoreTrailing(points)}
                     eager
+                    onClick={() => setSelectedEntryId(entry.id)}
                   />
                 </li>
               )
@@ -246,11 +251,9 @@ export function TribePage() {
               return (
                 <li key={entry.id}>
                   <CastawayPickCard
-                    static
                     name={castaway?.display_name ?? 'Castaway'}
                     photoUrl={castaway?.photo_url}
                     tribe={tribeOf(castaway)}
-                    disabled={eliminated}
                     badge={
                       eliminated ? (
                         <span aria-label="Eliminated">💀</span>
@@ -260,12 +263,32 @@ export function TribePage() {
                     }
                     trailing={scoreTrailing(points)}
                     eager
+                    onClick={() => setSelectedEntryId(entry.id)}
                   />
                 </li>
               )
             })}
           </ul>
         </section>
+      ) : null}
+
+      {selectedEntry ? (
+        <CastawayPointsBreakdownDialog
+          open={Boolean(selectedEntryId)}
+          onOpenChange={(next) => {
+            if (!next) setSelectedEntryId(null)
+          }}
+          name={selectedCastaway?.display_name ?? 'Castaway'}
+          photoUrl={selectedCastaway?.photo_url}
+          tribe={tribeOf(selectedCastaway)}
+          seasonTotal={selectedPoints}
+          castawayId={selectedEntry.castaway_id}
+          memberId={memberId}
+          rosterEntryId={selectedEntry.id}
+          lineScores={week.lineScores ?? []}
+          scoreEvents={week.scoreEvents ?? []}
+          latestEpisode={week.latestEpisode}
+        />
       ) : null}
     </PageContainer>
   )

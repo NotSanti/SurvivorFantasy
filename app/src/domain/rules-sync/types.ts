@@ -1,3 +1,5 @@
+import { WEEKLY_SCORING_RULES } from './weekly-scoring-rules'
+
 export const PARSER_VERSION = 'rules-v3'
 export const SEASON_51_SLUG = 'survivor-51-fantasy-tribe'
 export const WP_POSTS_URL = 'https://www.globaltv.com/wp-json/wp/v2/posts'
@@ -80,7 +82,7 @@ export type RuleDiffEntry = {
   after: string | number | null
 }
 
-export const KNOWN_SCORING_RULES: Array<{
+const CORE_SCORING_RULES: Array<{
   code: string
   label: string
   needles: string[]
@@ -95,7 +97,7 @@ export const KNOWN_SCORING_RULES: Array<{
     code: 'survive_pre_merge',
     label: 'Survive a pre merge episode',
     needles: ['survive', 'pre-merge'],
-    altNeedleSets: [['survive', 'prior to the merge']],
+    altNeedleSets: [['survive', 'prior to the merge'], ['survived the week'], ['survived', 'week']],
     points: 1,
     kind: 'survival',
     phase: 'pre_merge',
@@ -105,6 +107,7 @@ export const KNOWN_SCORING_RULES: Array<{
     code: 'survive_post_merge',
     label: 'Survive a post merge episode',
     needles: ['survive', 'post-merge'],
+    altNeedleSets: [['survived the week'], ['survived', 'week']],
     points: 3,
     kind: 'survival',
     phase: 'post_merge',
@@ -152,3 +155,6 @@ export const KNOWN_SCORING_RULES: Array<{
     maxOccurrencesPerCastawayEpisode: 1,
   },
 ]
+
+/** Core placement/survival/MVP plus weekly category rules used for Vision label mapping. */
+export const KNOWN_SCORING_RULES = [...CORE_SCORING_RULES, ...WEEKLY_SCORING_RULES]

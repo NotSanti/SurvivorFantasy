@@ -34,7 +34,7 @@ export function awaitingInitial(
  * extra calls pending, and every screen except Tribe waited on all of them.
  */
 export const LEAGUE_WEEK_VIEWS = {
-  tribe: ['roster', 'mvp', 'lineScores', 'castaways', 'rules'],
+  tribe: ['roster', 'mvp', 'lineScores', 'castaways', 'rules', 'scoreEvents'],
   standings: ['members', 'episodeScores', 'episodes', 'published'],
   home: ['members', 'episodeScores', 'episodes', 'published'],
   rules: ['rules'],
@@ -168,6 +168,24 @@ export function useLeagueWeek(
         .from('published_castaway_episode_scores')
         .select(
           'episode_number, published_at, revision, points_total, castaway_id',
+        )
+        .eq('season_id', seasonId!)
+        .abortSignal(signal)
+      if (error) throw error
+      return data
+    },
+  })
+
+  const scoreEventsQuery = useQuery({
+    queryKey: ['published-score-events', seasonId],
+    enabled: canQuerySeason && needs('scoreEvents'),
+    staleTime: 0,
+    queryFn: async ({ signal }) => {
+      await ensureAuthSession()
+      const { data, error } = await getSupabaseClient()
+        .from('published_castaway_score_events')
+        .select(
+          'season_id, episode_id, episode_number, castaway_id, score_revision_id, revision, points_total, scoring_rule_id, rule_code, rule_label, rule_kind, occurrences, points, evidence_note',
         )
         .eq('season_id', seasonId!)
         .abortSignal(signal)
@@ -358,19 +376,21 @@ export function useLeagueWeek(
       awaitingInitial(mvpQuery, canQuery && needs('mvp')) ||
       awaitingInitial(castawaysQuery, canQuerySeason && needs('castaways')) ||
       awaitingInitial(ruleSetQuery, canQuery && hasRuleSet && needs('rules')))
-  /** Tribe paints from roster, castaway identity, MVP, and line scores. */
+  /** Tribe paints from roster, castaway identity, MVP, line scores, and events. */
   const tribeLoading =
     Boolean(league && canQuery) &&
     (awaitingInitial(rosterQuery, canQuery && needs('roster')) ||
       awaitingInitial(castawaysQuery, canQuerySeason && needs('castaways')) ||
       awaitingInitial(mvpQuery, canQuery && needs('mvp')) ||
-      awaitingInitial(lineScoresQuery, canQuery && needs('lineScores')))
+      awaitingInitial(lineScoresQuery, canQuery && needs('lineScores')) ||
+      awaitingInitial(scoreEventsQuery, canQuerySeason && needs('scoreEvents')))
   const fetching =
     (needs('members') && membersQuery.isFetching) ||
     (needs('episodeScores') && episodeScoresQuery.isFetching) ||
     (needs('lineScores') && lineScoresQuery.isFetching) ||
     (needs('episodes') && episodesQuery.isFetching) ||
     (needs('published') && publishedQuery.isFetching) ||
+    (needs('scoreEvents') && scoreEventsQuery.isFetching) ||
     (needs('roster') && rosterQuery.isFetching) ||
     (needs('mvp') && mvpQuery.isFetching) ||
     (needs('castaways') && castawaysQuery.isFetching) ||
@@ -381,6 +401,7 @@ export function useLeagueWeek(
     (needs('lineScores') ? lineScoresQuery.error : null) ??
     (needs('episodes') ? episodesQuery.error : null) ??
     (needs('published') ? publishedQuery.error : null) ??
+    (needs('scoreEvents') ? scoreEventsQuery.error : null) ??
     (needs('roster') ? rosterQuery.error : null) ??
     (needs('mvp') ? mvpQuery.error : null) ??
     (needs('castaways') ? castawaysQuery.error : null) ??
@@ -390,6 +411,7 @@ export function useLeagueWeek(
     members: membersQuery.data ?? [],
     episodeScores: episodeScoresQuery.data ?? [],
     lineScores: lineScoresQuery.data ?? [],
+    scoreEvents: scoreEventsQuery.data ?? [],
     episodes: episodesQuery.data ?? [],
     publishedScores: publishedQuery.data ?? [],
     roster: rosterQuery.data ?? [],
@@ -421,6 +443,7 @@ export function useLeagueWeek(
       if (needs('lineScores')) void lineScoresQuery.refetch()
       if (needs('episodes')) void episodesQuery.refetch()
       if (needs('published')) void publishedQuery.refetch()
+      if (needs('scoreEvents')) void scoreEventsQuery.refetch()
       if (needs('roster')) void rosterQuery.refetch()
       if (needs('mvp')) void mvpQuery.refetch()
       if (needs('castaways')) void castawaysQuery.refetch()

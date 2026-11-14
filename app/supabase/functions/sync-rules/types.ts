@@ -93,7 +93,7 @@ export const KNOWN_SCORING_RULES: Array<{
   {
     code: 'survive_pre_merge',
     needles: ['survive', 'pre-merge'],
-    altNeedleSets: [['survive', 'prior to the merge']],
+    altNeedleSets: [['survive', 'prior to the merge'], ['survived the week'], ['survived', 'week']],
     points: 1,
     kind: 'survival',
     phase: 'pre_merge',
@@ -102,6 +102,7 @@ export const KNOWN_SCORING_RULES: Array<{
   {
     code: 'survive_post_merge',
     needles: ['survive', 'post-merge'],
+    altNeedleSets: [['survived the week'], ['survived', 'week']],
     points: 3,
     kind: 'survival',
     phase: 'post_merge',

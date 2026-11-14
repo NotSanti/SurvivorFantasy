@@ -12,6 +12,7 @@ export function leagueScoreQueryKeys(leagueId: string, seasonId: string) {
     ['merge-moves', leagueId],
     ['episodes', seasonId],
     ['published-scores', seasonId],
+    ['published-score-events', seasonId],
     ['season', seasonId],
     ['castaways', seasonId],
     ['rule-set-for-league', leagueId],

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ErrorState } from '@/components/states/ErrorState'
+import { AdminBreakdownReview } from '@/features/admin/AdminBreakdownReview'
 import { parseAltScores } from '@/domain/score-import/parse-results'
 import { getSupabaseClient } from '@/lib/supabase'
 
@@ -131,6 +132,8 @@ export function AdminScoresSection() {
           <p className="text-sm text-muted-foreground">{recover.data.status}</p>
         ) : null}
       </div>
+
+      <AdminBreakdownReview />
 
       <div className="space-y-1">
         <h3 className="text-sm font-medium">Recent imports</h3>

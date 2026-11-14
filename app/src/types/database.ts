@@ -964,6 +964,63 @@ export type Database = {
           },
         ]
       }
+      score_breakdown_reviews: {
+        Row: {
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          episode_id: string
+          episode_number: number
+          id: string
+          proposal: Json
+          season_id: string
+          source_image_url: string | null
+          status: Database["public"]["Enums"]["score_breakdown_review_status"]
+          updated_at: string
+        }
+        Insert: {
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          episode_id: string
+          episode_number: number
+          id?: string
+          proposal?: Json
+          season_id: string
+          source_image_url?: string | null
+          status?: Database["public"]["Enums"]["score_breakdown_review_status"]
+          updated_at?: string
+        }
+        Update: {
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          episode_id?: string
+          episode_number?: number
+          id?: string
+          proposal?: Json
+          season_id?: string
+          source_image_url?: string | null
+          status?: Database["public"]["Enums"]["score_breakdown_review_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "score_breakdown_reviews_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "score_breakdown_reviews_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       score_events: {
         Row: {
           evidence_note: string | null
@@ -1428,6 +1485,54 @@ export type Database = {
           },
         ]
       }
+      published_castaway_score_events: {
+        Row: {
+          castaway_id: string | null
+          episode_id: string | null
+          episode_number: number | null
+          evidence_note: string | null
+          occurrences: number | null
+          points: number | null
+          points_total: number | null
+          revision: number | null
+          rule_code: string | null
+          rule_kind: Database["public"]["Enums"]["scoring_rule_kind"] | null
+          rule_label: string | null
+          score_revision_id: string | null
+          scoring_rule_id: string | null
+          season_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "castaway_episode_score_revisions_castaway_id_fkey"
+            columns: ["castaway_id"]
+            isOneToOne: false
+            referencedRelation: "castaways"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "castaway_episode_score_revisions_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "castaway_episode_score_revisions_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "score_events_scoring_rule_id_fkey"
+            columns: ["scoring_rule_id"]
+            isOneToOne: false
+            referencedRelation: "scoring_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_league_invite: {
@@ -1635,6 +1740,18 @@ export type Database = {
         }
         Returns: Json
       }
+      publish_score_events: {
+        Args: {
+          p_episode_number: number
+          p_events: Json
+          p_season_id: string
+        }
+        Returns: Json
+      }
+      reject_score_breakdown_review: {
+        Args: { p_episode_number: number; p_season_id: string }
+        Returns: Json
+      }
       register_push_subscription: {
         Args: {
           p_auth: string
@@ -1800,6 +1917,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      upsert_score_breakdown_review: {
+        Args: {
+          p_episode_number: number
+          p_proposal: Json
+          p_season_id: string
+          p_source_image_url?: string | null
+        }
+        Returns: string
+      }
     }
     Enums: {
       castaway_status: 'active' | 'eliminated' | 'withdrawn'
@@ -1836,6 +1962,7 @@ export type Database = {
         | 'draft_created'
         | 'parse_failed'
         | 'fetch_failed'
+      score_breakdown_review_status: 'pending_review' | 'confirmed' | 'rejected'
       score_revision_status: 'parsed' | 'published' | 'superseded'
       scoring_phase: 'pre_merge' | 'post_merge' | 'finale' | 'any'
       scoring_rule_kind: 'survival' | 'weekly_category' | 'placement' | 'mvp'
@@ -2004,6 +2131,11 @@ export const Constants = {
         'draft_created',
         'parse_failed',
         'fetch_failed',
+      ],
+      score_breakdown_review_status: [
+        'pending_review',
+        'confirmed',
+        'rejected',
       ],
       score_revision_status: ['parsed', 'published', 'superseded'],
       scoring_phase: ['pre_merge', 'post_merge', 'finale', 'any'],
